@@ -1,81 +1,47 @@
-import express from "express";
-import verifyToken from "../middleware/verifyToken.js";
+// src/routes/forumRoutes.js
 
+import express from "express";
 import {
   listPublishedTopics,
   getTopicWithPosts,
   createPost,
   createTopic,
-  hideTopic,
   approvePost,
   rejectPost,
+  hideTopic
 } from "../controllers/forumController.js";
+
+import {
+  requireAuth,
+  requireAdmin
+} from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
-/* ==================== MILITANTS ==================== */
-// Tous les sujets visibles
+/* ------------------- PUBLIC / MILITANTS ------------------- */
+
+// Tous les topics publiés
 router.get("/topics/published", listPublishedTopics);
 
-// Un sujet + commentaires approuvés
+// Détails d’un topic + posts approuvés
 router.get("/topics/:id", getTopicWithPosts);
 
-// Création d’un post → statut "pending"
+// Création d’un post (statut = pending)
 router.post("/posts/create", createPost);
 
 
-/* ==================== ADMIN ======================== */
+/* ------------------- ADMINISTRATION ------------------- */
 
-// Création d’un topic
-router.post(
-  "/topics/create",
-  verifyToken,
-  (req, res, next) => {
-    if (req.user.role !== "admin" && req.user.role !== "superadmin") {
-      return res.status(403).json({ message: "Accès interdit" });
-    }
-    next();
-  },
-  createTopic
-);
+// Créer un topic (admin + superadmin)
+router.post("/topics/create", requireAdmin, createTopic);
 
-// Masquer un topic
-router.post(
-  "/topics/hide/:id",
-  verifyToken,
-  (req, res, next) => {
-    if (req.user.role !== "admin" && req.user.role !== "superadmin") {
-      return res.status(403).json({ message: "Accès interdit" });
-    }
-    next();
-  },
-  hideTopic
-);
+// Cacher un topic
+router.post("/topics/hide/:id", requireAdmin, hideTopic);
 
 // Approuver un post
-router.post(
-  "/posts/approve/:id",
-  verifyToken,
-  (req, res, next) => {
-    if (req.user.role !== "admin" && req.user.role !== "superadmin") {
-      return res.status(403).json({ message: "Accès interdit" });
-    }
-    next();
-  },
-  approvePost
-);
+router.post("/posts/approve/:id", requireAdmin, approvePost);
 
 // Rejeter un post
-router.post(
-  "/posts/reject/:id",
-  verifyToken,
-  (req, res, next) => {
-    if (req.user.role !== "admin" && req.user.role !== "superadmin") {
-      return res.status(403).json({ message: "Accès interdit" });
-    }
-    next();
-  },
-  rejectPost
-);
+router.post("/posts/reject/:id", requireAdmin, rejectPost);
 
 export default router;

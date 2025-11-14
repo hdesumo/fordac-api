@@ -1,21 +1,40 @@
 import express from "express";
 import {
-    login,
-    getProfile,
-    superadminLogin
+  login,
+  superadminLogin,
+  getProfile
 } from "../controllers/authController.js";
 
-import { requireAuth, requireSuperAdmin } from "../middleware/verifyToken.js"; // <-- corrigé
+// ✔️ Bon chemin, bon fichier, bon nom de dossier
+import { verifyToken, requireSuperAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Connexion utilisateur (admin / militant)
+/**
+ * 🔑 Connexion Admin
+ */
 router.post("/login", login);
 
-// Connexion du superadmin
+/**
+ * 👑 Connexion SuperAdmin
+ */
 router.post("/superadmin/login", superadminLogin);
 
-// Profil utilisateur connecté
-router.get("/profile", requireAuth, getProfile);
+/**
+ * 👤 Profil utilisateur connecté (admin ou superadmin)
+ */
+router.get("/profile", verifyToken, getProfile);
+
+/**
+ * 🛡️ Route SuperAdmin protégée
+ */
+router.get(
+  "/superadmin/secure",
+  verifyToken,
+  requireSuperAdmin,
+  (req, res) => {
+    res.json({ message: "Bienvenue SuperAdmin !" });
+  }
+);
 
 export default router;

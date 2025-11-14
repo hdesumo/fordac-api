@@ -2,9 +2,7 @@
 
 import jwt from "jsonwebtoken";
 
-// --------------------------------------------------
-// Vérifie que le token est présent ET valide
-// --------------------------------------------------
+// Vérifie que l'utilisateur est authentifié
 export const requireAuth = (req, res, next) => {
   const authHeader = req.headers["authorization"];
 
@@ -12,7 +10,7 @@ export const requireAuth = (req, res, next) => {
     return res.status(401).json({ message: "Token manquant" });
   }
 
-  const token = authHeader.split(" ")[1]; // Format: Bearer xxxxx
+  const token = authHeader.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ message: "Token invalide" });
@@ -20,16 +18,14 @@ export const requireAuth = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Injecte l'utilisateur dans req
+    req.user = decoded; // injecte l'utilisateur dans request
     next();
   } catch (err) {
     return res.status(403).json({ message: "Token non valide" });
   }
 };
 
-// --------------------------------------------------
-// Autorise uniquement le superadmin
-// --------------------------------------------------
+// Vérifie rôle superadmin uniquement
 export const requireSuperAdmin = (req, res, next) => {
   if (!req.user || req.user.role !== "superadmin") {
     return res.status(403).json({ message: "Accès réservé au superadmin" });
@@ -37,9 +33,7 @@ export const requireSuperAdmin = (req, res, next) => {
   next();
 };
 
-// --------------------------------------------------
-// Autorise admins + superadmins
-// --------------------------------------------------
+// Vérifie rôle admin OU superadmin
 export const requireAdmin = (req, res, next) => {
   if (!req.user || !["admin", "superadmin"].includes(req.user.role)) {
     return res.status(403).json({ message: "Accès réservé aux administrateurs" });
@@ -47,8 +41,6 @@ export const requireAdmin = (req, res, next) => {
   next();
 };
 
-// --------------------------------------------------
-// Compatibilité avec ton ancien code (export default)
-// --------------------------------------------------
+// Compatibilité ancienne version
 const verifyToken = requireAuth;
 export default verifyToken;
