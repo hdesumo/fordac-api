@@ -15,12 +15,12 @@ import authRoutes from "./routes/authRoutes.js";
 const app = express();
 
 /* ================================
-   🧩 CONFIGURATION CORS SÉCURISÉE
+   🧩 CORS
    ================================ */
 const allowedOrigins = [
-  "http://localhost:3000",              // Dev local Next.js
-  "https://fordac-connect.vercel.app",  // Domaine Vercel
-  "https://fordac-connect.org",         // Domaine personnalisé
+  "http://localhost:3000",
+  "https://fordac-connect.vercel.app",
+  "https://fordac-connect.org",
 ];
 
 const corsOptions = {
@@ -28,8 +28,8 @@ const corsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn("❌ Origine non autorisée par CORS :", origin);
-      callback(new Error("CORS non autorisé pour cette origine."));
+      console.warn("❌ CORS refusé pour :", origin);
+      callback(new Error("Origine CORS interdite"));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -40,7 +40,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 /* ================================
-   🧠 CONNEXION À LA BASE DE DONNÉES
+   🧠 PostgreSQL
    ================================ */
 pool
   .connect()
@@ -48,7 +48,7 @@ pool
   .catch((err) => console.error("❌ Erreur PostgreSQL :", err.message));
 
 /* ================================
-   🛣️ ROUTES PRINCIPALES
+   🛣️ ROUTES
    ================================ */
 app.get("/", (req, res) => {
   res.json({
@@ -66,12 +66,12 @@ app.use("/api/forum", forumRoutes);
 app.use("/api/auth", authRoutes);
 
 /* ================================
-   🚀 LANCEMENT DU SERVEUR
+   🚀 LANCEMENT
    ================================ */
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-  console.log("✅ API FORDAC Connect opérationnelle");
   console.log("🌐 Origines autorisées :", allowedOrigins.join(", "));
+  console.log("✅ API FORDAC Connect opérationnelle");
 });
