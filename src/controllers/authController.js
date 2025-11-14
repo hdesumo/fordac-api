@@ -1,4 +1,5 @@
 // src/controllers/authController.js
+
 import pool from "../config/db.js";
 import { generateToken } from "../utils/jwt.js";
 import bcrypt from "bcryptjs";
@@ -7,43 +8,54 @@ import nodemailer from "nodemailer";
 
 const SALT_ROUNDS = 10;
 
-// Note: init.sql inserted plaintext demo passwords as requested.
-// But in register/update flows we will hash passwords.
-
+/* ============================================================
+   🔐 LOGIN UTILISATEUR (ADMIN / MEMBER)
+   ============================================================ */
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const q = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
-    if (q.rowCount === 0)
-      return res.status(401).json({ message: "Invalid credentials" });
+
+    if (q.rowCount === 0) {
+      return res.status(401).json({ message: "Identifiants incorrects" });
+    }
 
     const user = q.rows[0];
 
-    // Compare hashed or plaintext depending on storage
+    // Vérification du mot de passe (hash ou plaintext)
     const stored = user.password || "";
     let match = false;
 
     if (stored.startsWith("$2")) {
       match = await bcrypt.compare(password, stored);
     } else {
-      match = password === stored;
+      match = password === stored; // mode legacy
     }
 
-    if (!match)
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!match) {
+      return res.status(401).json({ message: "Identifiants incorrects" });
+    }
 
+    // Génération du token
     const token = generateToken(user);
+    delete user.password;
 
-    delete user.password; // remove before sending
-    res.json({ token, user });
+    return res.json({
+      message: "Connexion réussie",
+      token,
+      user,
+    });
   } catch (err) {
+    console.error("❌ LOGIN ERROR :", err.message);
     res.status(500).json({ message: err.message });
   }
 };
 
+/* ============================================================
+   👑 CRÉATION D’ADMIN (RÉSERVÉ SUPERADMIN)
+   ============================================================ */
 export const registerAdmin = async (req, res) => {
-  // only superadmin should call this route (middleware)
   const { name, email, password = "fordac2025", phone, service_assigned } =
     req.body;
 
@@ -51,18 +63,27 @@ export const registerAdmin = async (req, res) => {
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
 
     const q = await pool.query(
-      `INSERT INTO users (name,email,password,role,phone,service_assigned,status)
-       VALUES ($1,$2,$3,'admin',$4,$5,'approved')
-       RETURNING id,name,email,role`,
+      `
+      INSERT INTO users (name,email,password,role,phone,service_assigned,status)
+      VALUES ($1,$2,$3,'admin',$4,$5,'approved')
+      RETURNING id,name,email,role;
+    `,
       [name, email, hashed, phone || null, service_assigned || null]
     );
 
-    res.status(201).json({ admin: q.rows[0] });
+    return res.status(201).json({
+      message: "Admin créé avec succès",
+      admin: q.rows[0],
+    });
   } catch (err) {
+    console.error("❌ REGISTER ADMIN ERROR :", err.message);
     res.status(500).json({ message: err.message });
   }
 };
 
+/* ============================================================
+   🟢 CRÉATION DE MEMBRE
+   ============================================================ */
 export const registerMember = async (req, res) => {
   const {
     name,
@@ -80,18 +101,15 @@ export const registerMember = async (req, res) => {
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
 
     const q = await pool.query(
-      `INSERT INTO users (
+      `
+      INSERT INTO users (
         name,email,password,role,phone,
         membership_level,status,
         region_id,departement_id,zone_id,arrondissement_id
-       )
-       VALUES (
-        $1,$2,$3,'member',$4,
-        $5,'pending',
-        $6,$7,$8,$9
-       )
-       RETURNING id,name,email,status`,
-
+      )
+      VALUES ($1,$2,$3,'member',$4,$5,'pending',$6,$7,$8,$9)
+      RETURNING id,name,email,status;
+    `,
       [
         name,
         email,
@@ -105,12 +123,19 @@ export const registerMember = async (req, res) => {
       ]
     );
 
-    res.status(201).json({ member: q.rows[0] });
+    return res.status(201).json({
+      message: "Membre enregistré",
+      member: q.rows[0],
+    });
   } catch (err) {
+    console.error("❌ REGISTER MEMBER ERROR :", err.message);
     res.status(500).json({ message: err.message });
   }
 };
 
+/* ============================================================
+   🔄 MOT DE PASSE OUBLIÉ (VERSION SIMPLIFIÉE)
+   ============================================================ */
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -119,20 +144,28 @@ export const forgotPassword = async (req, res) => {
       email,
     ]);
 
-    if (q.rowCount === 0)
-      return res.status(404).json({ message: "Email not found" });
+    if (q.rowCount === 0) {
+      return res.status(404).json({ message: "Email introuvable" });
+    }
 
+    // Génération d’un token simple (V1)
     const token = crypto.randomBytes(20).toString("hex");
 
-    // V1: we return token as simulation (should store it in DB in V2)
-    res.json({ message: "Simulated recovery token (V1)", token });
+    return res.json({
+      message: "Token de récupération généré (mode démo)",
+      token,
+    });
   } catch (err) {
+    console.error("❌ FORGOT PASSWORD ERROR :", err.message);
     res.status(500).json({ message: err.message });
   }
 };
 
+/* ============================================================
+   🔐 CHANGEMENT DE MOT DE PASSE (UTILISATEUR CONNECTÉ)
+   ============================================================ */
 export const changePassword = async (req, res) => {
-  const { user } = req; // from verifyToken
+  const { user } = req; // injecté par verifyToken
   const { oldPassword, newPassword } = req.body;
 
   try {
@@ -140,11 +173,11 @@ export const changePassword = async (req, res) => {
       user.id,
     ]);
 
-    if (q.rowCount === 0)
-      return res.status(404).json({ message: "User not found" });
+    if (q.rowCount === 0) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+    }
 
     const stored = q.rows[0].password;
-
     let ok = false;
 
     if (stored.startsWith("$2")) {
@@ -153,8 +186,9 @@ export const changePassword = async (req, res) => {
       ok = oldPassword === stored;
     }
 
-    if (!ok)
-      return res.status(403).json({ message: "Old password incorrect" });
+    if (!ok) {
+      return res.status(403).json({ message: "Ancien mot de passe incorrect" });
+    }
 
     const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
@@ -163,8 +197,40 @@ export const changePassword = async (req, res) => {
       [hashed, user.id]
     );
 
-    res.json({ message: "Password updated" });
+    return res.json({ message: "Mot de passe mis à jour" });
   } catch (err) {
+    console.error("❌ CHANGE PASSWORD ERROR :", err.message);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* ============================================================
+   🧑‍💼 PROFIL UTILISATEUR CONNECTÉ
+   ============================================================ */
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Non authentifié" });
+    }
+
+    const q = await pool.query(
+      `
+      SELECT id,name,email,phone,role,membership_level,status,service_assigned
+      FROM users
+      WHERE id=$1
+    `,
+      [userId]
+    );
+
+    if (q.rowCount === 0) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+    }
+
+    return res.json(q.rows[0]);
+  } catch (err) {
+    console.error("❌ GET PROFILE ERROR :", err.message);
     res.status(500).json({ message: err.message });
   }
 };
