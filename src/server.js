@@ -10,6 +10,7 @@ import eventRoutes from "./routes/eventRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import adhesionRoutes from "./routes/adhesionRoutes.js";
 import forumRoutes from "./routes/forumRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/adhesion", adhesionRoutes);
 app.use("/api/forum", forumRoutes);
+app.use("/api/auth", authRoutes);
 
 /* ================================
    🚀 LANCEMENT DU SERVEUR
