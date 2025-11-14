@@ -1,13 +1,13 @@
-// src/routes/messagesRoutes.js
 import express from "express";
-import { sendMessage, inbox, sent, markRead } from "../controllers/messagesController.js";
-import { requireAuth } from "../middlewares/verifyToken.js";
+import { requireAuth } from "../middleware/verifyToken.js"; // <-- corrigé
+import {
+    listMessages,
+    sendMessage
+} from "../controllers/messagesController.js";
 
 const router = express.Router();
 
-router.post("/send", requireAuth, sendMessage);
-router.get("/inbox", requireAuth, inbox);
-router.get("/sent", requireAuth, sent);
-router.post("/:id/read", requireAuth, markRead);
+router.get("/", requireAuth, listMessages);
+router.post("/", requireAuth, sendMessage);
 
 export default router;

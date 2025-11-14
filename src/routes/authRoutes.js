@@ -1,14 +1,21 @@
-// src/routes/authRoutes.js
 import express from "express";
-import { login, registerAdmin, registerMember, forgotPassword, changePassword } from "../controllers/authController.js";
-import { requireAuth, requireSuperAdmin } from "../middlewares/verifyToken.js";
+import {
+    login,
+    getProfile,
+    superadminLogin
+} from "../controllers/authController.js";
+
+import { requireAuth, requireSuperAdmin } from "../middleware/verifyToken.js"; // <-- corrigé
 
 const router = express.Router();
 
+// Connexion utilisateur (admin / militant)
 router.post("/login", login);
-router.post("/forgot-password", forgotPassword);
-router.post("/register-member", registerMember); // public from vitrine
-router.post("/change-password", requireAuth, changePassword);
-router.post("/register-admin", requireAuth, requireSuperAdmin, registerAdmin); // only superadmin
+
+// Connexion du superadmin
+router.post("/superadmin/login", superadminLogin);
+
+// Profil utilisateur connecté
+router.get("/profile", requireAuth, getProfile);
 
 export default router;
