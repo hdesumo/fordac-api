@@ -33,7 +33,6 @@ export const createMember = async (req, res) => {
     terms_accepted
   } = req.body;
 
-  // 🔍 Validation stricte
   if (
     !name ||
     !email ||
@@ -53,19 +52,12 @@ export const createMember = async (req, res) => {
   }
 
   try {
-    // 🔍 Vérifier doublon email
-    const check = await pool.query(
-      "SELECT id FROM members WHERE email = $1",
-      [email]
-    );
+    const check = await pool.query("SELECT id FROM members WHERE email = $1", [email]);
 
     if (check.rows.length > 0) {
-      return res.status(400).json({
-        error: "Un membre avec cet email existe déjà."
-      });
+      return res.status(400).json({ error: "Un membre avec cet email existe déjà." });
     }
 
-    // 🟢 Insérer la demande d'adhésion
     const query = `
       INSERT INTO members (
         name, email, phone, membership_level,
@@ -92,7 +84,6 @@ export const createMember = async (req, res) => {
     const result = await pool.query(query, values);
     const member = result.rows[0];
 
-    // Envoi d’un email automatique (réception de demande)
     await transporter.sendMail({
       from: process.env.MAIL_FROM,
       to: email,
@@ -101,7 +92,6 @@ export const createMember = async (req, res) => {
         <h2>Bonjour ${name},</h2>
         <p>Votre demande d’adhésion a bien été reçue.</p>
         <p>Status : <strong>En attente de validation</strong>.</p>
-        <p>Vous serez contacté(e) dès que votre adhésion sera approuvée.</p>
         <p>L’équipe FORDAC Connect</p>
       `
     });
@@ -124,7 +114,6 @@ export const approveMember = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // 📌 Vérifier existence
     const result = await pool.query("SELECT * FROM members WHERE id = $1", [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Membre non trouvé." });
@@ -136,11 +125,9 @@ export const approveMember = async (req, res) => {
       return res.status(400).json({ error: "Ce membre est déjà approuvé." });
     }
 
-    // 🔐 Génération mot de passe aléatoire
     const rawPassword = "fordac" + Math.floor(1000 + Math.random() * 9000);
     const hashed = await bcrypt.hash(rawPassword, 10);
 
-    // Mise à jour du statut
     const update = await pool.query(
       `
       UPDATE members
@@ -153,7 +140,6 @@ export const approveMember = async (req, res) => {
 
     const updated = update.rows[0];
 
-    // Envoi mail avec identifiants
     await transporter.sendMail({
       from: process.env.MAIL_FROM,
       to: updated.email,
@@ -167,8 +153,6 @@ export const approveMember = async (req, res) => {
           Mot de passe : <strong>${rawPassword}</strong>
         </p>
         <p>Vous pouvez désormais accéder à votre espace militant.</p>
-        <br/>
-        <p>FORDAC Connect</p>
       `,
     });
 
@@ -190,10 +174,7 @@ export const getMemberById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query(
-      "SELECT * FROM members WHERE id = $1",
-      [id]
-    );
+    const result = await pool.query("SELECT * FROM members WHERE id = $1", [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Membre non trouvé." });
@@ -204,5 +185,67 @@ export const getMemberById = async (req, res) => {
   } catch (error) {
     console.error("❌ Erreur PostgreSQL :", error.message);
     res.status(500).json({ error: "Erreur lors de la récupération du membre." });
+  }
+};
+
+/* ============================================================
+   📌 🔥 NOUVEAU : METTRE À JOUR LES INFORMATIONS D'UN MEMBRE
+   ============================================================ */
+export const updateMember = async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    phone,
+    membership_level,
+    secteur,
+    arrondissement,
+    profession,
+    quartier,
+    status
+  } = req.body;
+
+  try {
+    const check = await pool.query("SELECT id FROM members WHERE id = $1", [id]);
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: "Membre non trouvé." });
+    }
+
+    const query = `
+      UPDATE members
+      SET
+        name = COALESCE($1, name),
+        phone = COALESCE($2, phone),
+        membership_level = COALESCE($3, membership_level),
+        secteur = COALESCE($4, secteur),
+        arrondissement = COALESCE($5, arrondissement),
+        profession = COALESCE($6, profession),
+        quartier = COALESCE($7, quartier),
+        status = COALESCE($8, status)
+      WHERE id = $9
+      RETURNING *;
+    `;
+
+    const values = [
+      name,
+      phone,
+      membership_level,
+      secteur,
+      arrondissement,
+      profession,
+      quartier,
+      status,
+      id
+    ];
+
+    const result = await pool.query(query, values);
+
+    res.json({
+      message: "Membre mis à jour avec succès.",
+      member: result.rows[0],
+    });
+
+  } catch (error) {
+    console.error("❌ Erreur updateMember :", error.message);
+    res.status(500).json({ error: "Erreur lors de la mise à jour du membre." });
   }
 };
