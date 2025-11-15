@@ -11,6 +11,7 @@ import contactRoutes from "./routes/contactRoutes.js";
 import adhesionRoutes from "./routes/adhesionRoutes.js";
 import forumRoutes from "./routes/forumRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/adhesion", adhesionRoutes);
 app.use("/api/forum", forumRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/admins", adminRoutes);
 
 /* ================================
    🚀 LANCEMENT
