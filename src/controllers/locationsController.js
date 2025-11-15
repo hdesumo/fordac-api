@@ -1,5 +1,5 @@
 // src/controllers/locationsController.js
-import pool from "../db.js";
+import pool from "../config/db.js";
 
 export const getRegions = async (req, res) => {
   try {

@@ -1,5 +1,5 @@
 // src/controllers/messagesController.js
-import pool from "../db.js";
+import pool from "../config/db.js";
 
 export const sendMessage = async (req, res) => {
   // req.user exists from middleware
