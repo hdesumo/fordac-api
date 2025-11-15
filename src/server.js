@@ -22,6 +22,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://fordac-connect.vercel.app",
   "https://fordac-connect.org",
+  "https://www.fordac-connect.org",  // ⭐ Très important !!
 ];
 
 const corsOptions = {
@@ -38,7 +39,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
 
 /* ================================
    🧠 PostgreSQL
