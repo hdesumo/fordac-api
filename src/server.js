@@ -10,6 +10,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const contactRoutes = require("./src/routes/contactRoutes");
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.use("/auth", require("./routes/authRoutes"));
 app.use("/forum", require("./routes/forumRoutes"));
 app.use("/members", require("./routes/membersRoutes"));
 app.use("/upload", require("../upload-service/src/routes/uploadRoutes"));
+app.use("/contact", contactRoutes);
 
 /* -------------------------------------------------
    🧪 TEST ROUTE — pour monitoring
