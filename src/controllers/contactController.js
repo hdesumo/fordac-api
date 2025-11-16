@@ -1,22 +1,39 @@
-import pool from "../config/db.js";
+const pool = require("../config/db.js");
+const mail = require("../services/mail.js");
 
-// 📩 Enregistrer un message de contact
-export const createContactMessage = async (req, res) => {
+exports.sendContactMessage = async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
 
-    if (!name || !email || !message) {
-      return res.status(400).json({ message: "Champs manquants." });
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ message: "Tous les champs sont obligatoires." });
     }
 
-    await pool.query(
-      "INSERT INTO contacts (name, email, subject, message, created_at) VALUES ($1, $2, $3, $4, NOW())",
-      [name, email, subject || "Sans objet", message]
-    );
+    // Enregistrer dans la base
+    const insertQuery = `
+      INSERT INTO contacts (name, email, subject, message)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `;
 
-    res.status(201).json({ message: "Message envoyé avec succès." });
+    const values = [name, email, subject, message];
+    const result = await pool.query(insertQuery, values);
+
+    // Envoi email
+    await mail.sendContactMail({
+      name,
+      email,
+      subject,
+      message,
+    });
+
+    res.status(200).json({
+      message: "Message envoyé avec succès.",
+      contact: result.rows[0],
+    });
+
   } catch (error) {
     console.error("Erreur contact:", error.message);
-    res.status(500).json({ message: "Erreur serveur lors de l’envoi du message." });
+    res.status(500).json({ message: "Erreur lors de l’envoi du message." });
   }
 };

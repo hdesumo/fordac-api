@@ -1,19 +1,19 @@
-import express from "express";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
-import pool from "../config/db.js";
-import { verifyToken } from "../middleware/authMiddleware.js";
+const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+const pool = require("../config/db.js");
+const { verifyToken } = require("../middleware/authMiddleware.js");
 
 const router = express.Router();
 
-// 📁 Dossier des fichiers uploadés
+// 📁 Dossier destination
 const uploadDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// ⚙️ Configuration Multer
+// ⚙️ Multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// 📤 Upload de photo d’identité
+// 📤 Upload de photo
 router.post("/photo", verifyToken, upload.single("photo"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "Aucune photo reçue." });
@@ -32,10 +32,13 @@ router.post("/photo", verifyToken, upload.single("photo"), async (req, res) => {
     const photoPath = `/uploads/${req.file.filename}`;
     const userId = req.user.id;
 
-    await pool.query("UPDATE users SET photo_url=$1 WHERE id=$2", [photoPath, userId]);
+    await pool.query("UPDATE users SET photo_url = $1 WHERE id = $2", [
+      photoPath,
+      userId,
+    ]);
 
     res.json({
-      message: "Photo téléchargée et enregistrée avec succès.",
+      message: "Photo téléchargée avec succès.",
       photo_url: photoPath,
     });
   } catch (error) {
@@ -44,7 +47,7 @@ router.post("/photo", verifyToken, upload.single("photo"), async (req, res) => {
   }
 });
 
-// 📥 Liste de tous les fichiers uploadés (pour test)
+// 📥 Lister tous les fichiers uploadés
 router.get("/", (req, res) => {
   const files = fs.readdirSync(uploadDir).map((name) => ({
     name,
@@ -53,4 +56,4 @@ router.get("/", (req, res) => {
   res.json(files);
 });
 
-export default router;
+module.exports = router;

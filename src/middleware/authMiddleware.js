@@ -1,10 +1,11 @@
-// src/middleware/authMiddleware.js
-import jwt from "jsonwebtoken";
+// src/middleware/authMiddleware.js (CommonJS)
+
+const jwt = require("jsonwebtoken");
 
 /**
- * ✅ Middleware générique : vérifier si un token JWT est présent et valide
+ * 🔐 Vérifie si un token JWT est valide
  */
-export const verifyToken = (req, res, next) => {
+const verifyToken = (req, res, next) => {
   try {
     const header = req.headers.authorization;
 
@@ -25,9 +26,9 @@ export const verifyToken = (req, res, next) => {
 };
 
 /**
- * 🔐 Middleware : accès réservé aux admins OU superadmins
+ * 🔐 Accès réservé aux Admins OU SuperAdmins
  */
-export const requireAdmin = (req, res, next) => {
+const requireAdmin = (req, res, next) => {
   if (req.user.role !== "admin" && req.user.role !== "superadmin") {
     return res.status(403).json({ message: "Accès interdit" });
   }
@@ -35,11 +36,18 @@ export const requireAdmin = (req, res, next) => {
 };
 
 /**
- * 🔐 Middleware : réservé exclusivement au SuperAdmin
+ * 🔐 Accès réservé exclusivement au SuperAdmin
  */
-export const requireSuperAdmin = (req, res, next) => {
+const requireSuperAdmin = (req, res, next) => {
   if (req.user.role !== "superadmin") {
     return res.status(403).json({ message: "Accès réservé au SuperAdmin" });
   }
   next();
+};
+
+// EXPORT COMMONJS
+module.exports = {
+  verifyToken,
+  requireAdmin,
+  requireSuperAdmin,
 };

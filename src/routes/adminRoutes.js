@@ -1,36 +1,21 @@
-import express from "express";
-import { verifyToken } from "../middleware/authMiddleware.js";
-import {
-  createAdmin,
-  loginAdmin,
-  getAdmins,
-  updateAdminRole
-} from "../controllers/adminController.js";
-
+const express = require("express");
 const router = express.Router();
 
-/**
- * 🔐 Connexion admin
- * POST /api/admins/login
- */
-router.post("/login", loginAdmin);
+const {
+  createAdmin,
+  listAdmins,
+  deleteAdmin,
+  adminLogin,
+} = require("../controllers/adminController.js");
 
-/**
- * ➕ Création d’un nouvel admin (réservé au superadmin)
- * POST /api/admins/create
- */
-router.post("/create", verifyToken, createAdmin);
+const {
+  verifyToken,
+  requireSuperAdmin,
+} = require("../middleware/authMiddleware.js");
 
-/**
- * 📋 Liste de tous les admins (superadmin uniquement)
- * GET /api/admins
- */
-router.get("/", verifyToken, getAdmins);
+router.post("/", verifyToken, requireSuperAdmin, createAdmin);
+router.get("/", verifyToken, requireSuperAdmin, listAdmins);
+router.delete("/:id", verifyToken, requireSuperAdmin, deleteAdmin);
+router.post("/login", adminLogin);
 
-/**
- * 🔄 Modifier le rôle ou le statut d’un admin
- * PUT /api/admins/role/:id
- */
-router.put("/role/:id", verifyToken, updateAdminRole);
-
-export default router;
+module.exports = router;

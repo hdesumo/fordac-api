@@ -58,7 +58,7 @@ app.use(
 ---------------------------------------------------*/
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/forum", require("./routes/forumRoutes"));
-app.use("/members", require("./routes/membersRoutes"));
+app.use("/members", require("./routes/memberRoutes"));
 app.use("/upload", require("../upload-service/src/routes/uploadRoutes"));
 app.use("/contact", contactRoutes);
 

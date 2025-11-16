@@ -1,11 +1,11 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import pool from "../config/db.js";
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db.js");
 
 /**
  * ➕ Créer un admin (réservé au superadmin)
  */
-export const createAdmin = async (req, res) => {
+exports.createAdmin = async (req, res) => {
   try {
     if (req.user.role !== "superadmin") {
       return res.status(403).json({ message: "Accès réservé au superadmin." });
@@ -40,7 +40,7 @@ export const createAdmin = async (req, res) => {
 /**
  * 🔐 Connexion d’un admin
  */
-export const loginAdmin = async (req, res) => {
+exports.loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -51,6 +51,7 @@ export const loginAdmin = async (req, res) => {
 
     const admin = result.rows[0];
     const validPassword = await bcrypt.compare(password, admin.password);
+
     if (!validPassword) {
       return res.status(401).json({ message: "Mot de passe incorrect." });
     }
@@ -80,7 +81,7 @@ export const loginAdmin = async (req, res) => {
 /**
  * 📋 Liste des admins
  */
-export const getAdmins = async (req, res) => {
+exports.getAdmins = async (req, res) => {
   try {
     if (req.user.role !== "superadmin") {
       return res.status(403).json({ message: "Accès réservé au superadmin." });
@@ -100,7 +101,7 @@ export const getAdmins = async (req, res) => {
 /**
  * 🔄 Modifier le rôle ou le statut d’un admin
  */
-export const updateAdminRole = async (req, res) => {
+exports.updateAdminRole = async (req, res) => {
   try {
     if (req.user.role !== "superadmin") {
       return res.status(403).json({ message: "Accès réservé au superadmin." });

@@ -1,11 +1,11 @@
-import pool from "../config/db.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+const pool = require("../config/db.js");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 /* ============================================================
    📌 CONNEXION MEMBRE
    ============================================================ */
-export const loginMember = async (req, res) => {
+exports.loginMember = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -15,7 +15,6 @@ export const loginMember = async (req, res) => {
   }
 
   try {
-    // 🔍 Vérifier que le membre existe
     const result = await pool.query(
       "SELECT * FROM members WHERE email = $1 LIMIT 1",
       [email]
@@ -29,14 +28,12 @@ export const loginMember = async (req, res) => {
 
     const member = result.rows[0];
 
-    // 🔒 Vérifier si membre approuvé
     if (member.status !== "approved") {
       return res.status(403).json({
         error: "Votre adhésion est encore en attente de validation."
       });
     }
 
-    // 🔐 Vérifier mot de passe
     const isMatch = await bcrypt.compare(password, member.password);
 
     if (!isMatch) {
@@ -45,14 +42,12 @@ export const loginMember = async (req, res) => {
       });
     }
 
-    // 🟢 Générer JWT
     const token = jwt.sign(
       { id: member.id, role: "member", email: member.email },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // 🔥 Retourner infos essentielles
     res.json({
       message: "Connexion réussie.",
       token,
@@ -72,11 +67,10 @@ export const loginMember = async (req, res) => {
   }
 };
 
-
 /* ============================================================
    📌 VÉRIFICATION DU TOKEN
    ============================================================ */
-export const verifyTokenController = async (req, res) => {
+exports.verifyTokenController = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 

@@ -1,11 +1,11 @@
-import pool from "../config/db.js";
-import transporter from "../config/mail.js";
-import bcrypt from "bcryptjs";
+const pool = require("../config/db.js");
+const transporter = require("../services/mail.js");
+const bcrypt = require("bcryptjs");
 
 /* ============================================================
    📌 LISTER TOUS LES MEMBRES
    ============================================================ */
-export const listMembers = async (req, res) => {
+exports.listMembers = async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM members ORDER BY id DESC");
     res.json(result.rows);
@@ -18,7 +18,7 @@ export const listMembers = async (req, res) => {
 /* ============================================================
    📌 CRÉER UN MEMBRE — INSCRIPTION VIA LA VITRINE
    ============================================================ */
-export const createMember = async (req, res) => {
+exports.createMember = async (req, res) => {
   const {
     name,
     email,
@@ -110,7 +110,7 @@ export const createMember = async (req, res) => {
 /* ============================================================
    📌 APPROUVER UN MEMBRE — ADMIN
    ============================================================ */
-export const approveMember = async (req, res) => {
+exports.approveMember = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -170,7 +170,7 @@ export const approveMember = async (req, res) => {
 /* ============================================================
    📌 RÉCUPÉRER UN MEMBRE PAR ID
    ============================================================ */
-export const getMemberById = async (req, res) => {
+exports.getMemberById = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -191,7 +191,7 @@ export const getMemberById = async (req, res) => {
 /* ============================================================
    📌 🔥 NOUVEAU : METTRE À JOUR LES INFORMATIONS D'UN MEMBRE
    ============================================================ */
-export const updateMember = async (req, res) => {
+exports.updateMember = async (req, res) => {
   const { id } = req.params;
   const {
     name,

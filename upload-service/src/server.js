@@ -1,10 +1,12 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import uploadRoutes from "./routes/uploadRoutes.js";
-import path from "path";
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const path = require("path");
 
 dotenv.config();
+
+const uploadRoutes = require("./routes/uploadRoutes.js");
+
 const app = express();
 
 app.use(cors());
@@ -17,6 +19,7 @@ app.use("/", uploadRoutes);
 app.use("/files", express.static(path.resolve("upload-service/uploads")));
 
 const PORT = process.env.PORT || 5002;
+
 app.listen(PORT, () => {
   console.log("📤 FORDAC Upload Service running");
   console.log(`✅ Port: ${PORT}`);

@@ -1,20 +1,20 @@
 // src/routes/forumRoutes.js
 
-import express from "express";
-import {
+const express = require("express");
+const {
   listPublishedTopics,
   getTopicWithPosts,
   createPost,
   createTopic,
   approvePost,
   rejectPost,
-  hideTopic
-} from "../controllers/forumController.js";
+  hideTopic,
+} = require("../controllers/forumController.js");
 
-import {
+const {
   requireAuth,
-  requireAdmin
-} from "../middleware/verifyToken.js";
+  requireAdmin,
+} = require("../middleware/verifyToken.js");
 
 const router = express.Router();
 
@@ -44,4 +44,6 @@ router.post("/posts/approve/:id", requireAdmin, approvePost);
 // Rejeter un post
 router.post("/posts/reject/:id", requireAdmin, rejectPost);
 
-export default router;
+
+// EXPORT COMMONJS
+module.exports = router;

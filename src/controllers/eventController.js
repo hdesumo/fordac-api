@@ -1,7 +1,7 @@
-import pool from "../config/db.js";
+const pool = require("../config/db.js");
 
 // 🟩 Créer un nouvel événement
-export const createEvent = async (req, res) => {
+exports.createEvent = async (req, res) => {
   try {
     const { title, description, location, start_date, end_date } = req.body;
 
@@ -29,7 +29,7 @@ export const createEvent = async (req, res) => {
 };
 
 // 🟦 Lister tous les événements
-export const listEvents = async (req, res) => {
+exports.listEvents = async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM events ORDER BY start_date DESC;"
@@ -42,7 +42,7 @@ export const listEvents = async (req, res) => {
 };
 
 // 🟨 Récupérer un événement par ID
-export const getEventById = async (req, res) => {
+exports.getEventById = async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query("SELECT * FROM events WHERE id = $1", [id]);

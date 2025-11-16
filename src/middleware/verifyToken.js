@@ -1,9 +1,9 @@
-// src/middleware/verifyToken.js
+// src/middleware/verifyToken.js (CommonJS)
 
-import jwt from "jsonwebtoken";
+const jwt = require("jsonwebtoken");
 
 // Vérifie que l'utilisateur est authentifié
-export const requireAuth = (req, res, next) => {
+const requireAuth = (req, res, next) => {
   const authHeader = req.headers["authorization"];
 
   if (!authHeader) {
@@ -18,7 +18,7 @@ export const requireAuth = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // injecte l'utilisateur dans request
+    req.user = decoded; // injecte l'utilisateur dans la requête
     next();
   } catch (err) {
     return res.status(403).json({ message: "Token non valide" });
@@ -26,21 +26,28 @@ export const requireAuth = (req, res, next) => {
 };
 
 // Vérifie rôle superadmin uniquement
-export const requireSuperAdmin = (req, res, next) => {
+const requireSuperAdmin = (req, res, next) => {
   if (!req.user || req.user.role !== "superadmin") {
-    return res.status(403).json({ message: "Accès réservé au superadmin" });
+    return res
+      .status(403)
+      .json({ message: "Accès réservé au superadmin" });
   }
   next();
 };
 
 // Vérifie rôle admin OU superadmin
-export const requireAdmin = (req, res, next) => {
+const requireAdmin = (req, res, next) => {
   if (!req.user || !["admin", "superadmin"].includes(req.user.role)) {
-    return res.status(403).json({ message: "Accès réservé aux administrateurs" });
+    return res
+      .status(403)
+      .json({ message: "Accès réservé aux administrateurs" });
   }
   next();
 };
 
-// Compatibilité ancienne version
-const verifyToken = requireAuth;
-export default verifyToken;
+// Export CommonJS
+module.exports = {
+  requireAuth,
+  requireAdmin,
+  requireSuperAdmin,
+};

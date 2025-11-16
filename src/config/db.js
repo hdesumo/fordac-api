@@ -1,21 +1,17 @@
-import dotenv from "dotenv";
+const dotenv = require("dotenv");
 dotenv.config();
-import pg from "pg";
-const { Pool } = pg;
 
-// ✅ Connexion PostgreSQL sans SSL, 100 % via .env
+const { Pool } = require("pg");
+
 const pool = new Pool({
   host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT),
+  port: process.env.DB_PORT,
   user: process.env.DB_USER,
-  password: String(process.env.DB_PASS), // 🔒 Conversion forcée en texte
+  password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  ssl: false,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
-pool
-  .connect()
-  .then(() => console.log("✅ Connecté à PostgreSQL (sans SSL)"))
-  .catch((err) => console.error("❌ Erreur PostgreSQL :", err.message));
-
-export default pool;
+module.exports = pool;

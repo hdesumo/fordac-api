@@ -1,9 +1,14 @@
-import express from "express";
-import { createAdhesion } from "../controllers/adhesionController.js";
-
+const express = require("express");
 const router = express.Router();
 
-// 📝 Route pour recevoir une adhésion depuis le site vitrine
-router.post("/", createAdhesion);
+const {
+  createAdhesion,
+  listAdhesions,
+  getAdhesionById,
+} = require("../controllers/adhesionController.js");
 
-export default router;
+router.post("/", createAdhesion);
+router.get("/", listAdhesions);
+router.get("/:id", getAdhesionById);
+
+module.exports = router;

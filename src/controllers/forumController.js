@@ -1,9 +1,11 @@
-import pool from "../config/db.js";
+// src/controllers/forumController.js (CommonJS)
+
+const pool = require("../config/db");
 
 /* ============================================================
    1. LISTE DES TOPICS PUBLIÉS (militants)
 ============================================================ */
-export const listPublishedTopics = async (req, res) => {
+const listPublishedTopics = async (req, res) => {
   try {
     const q = `
       SELECT id, title, description, created_at 
@@ -22,7 +24,7 @@ export const listPublishedTopics = async (req, res) => {
 /* ============================================================
    2. DÉTAILS D’UN TOPIC + POSTS APPROUVÉS
 ============================================================ */
-export const getTopicWithPosts = async (req, res) => {
+const getTopicWithPosts = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -56,7 +58,7 @@ export const getTopicWithPosts = async (req, res) => {
 /* ============================================================
    3. AJOUT D’UN POST (MILITANT)
 ============================================================ */
-export const createPost = async (req, res) => {
+const createPost = async (req, res) => {
   const { topic_id, author, content } = req.body;
 
   if (!topic_id || !content)
@@ -79,7 +81,7 @@ export const createPost = async (req, res) => {
 /* ============================================================
    4. ADMIN - CRÉER UN TOPIC
 ============================================================ */
-export const createTopic = async (req, res) => {
+const createTopic = async (req, res) => {
   const { title, description } = req.body;
 
   if (!title)
@@ -102,7 +104,7 @@ export const createTopic = async (req, res) => {
 /* ============================================================
    5. ADMIN - MASQUER UN TOPIC
 ============================================================ */
-export const hideTopic = async (req, res) => {
+const hideTopic = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -117,7 +119,7 @@ export const hideTopic = async (req, res) => {
 /* ============================================================
    6. ADMIN - APPROUVER UN POST
 ============================================================ */
-export const approvePost = async (req, res) => {
+const approvePost = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -132,7 +134,7 @@ export const approvePost = async (req, res) => {
 /* ============================================================
    7. ADMIN - REJETER UN POST
 ============================================================ */
-export const rejectPost = async (req, res) => {
+const rejectPost = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -142,4 +144,17 @@ export const rejectPost = async (req, res) => {
     console.error("❌ rejectPost:", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
+};
+
+/* ============================================================
+   EXPORTS COMMONJS
+============================================================ */
+module.exports = {
+  listPublishedTopics,
+  getTopicWithPosts,
+  createPost,
+  createTopic,
+  hideTopic,
+  approvePost,
+  rejectPost,
 };

@@ -1,7 +1,6 @@
-// src/controllers/locationsController.js
-import pool from "../config/db.js";
+const pool = require("../config/db.js");
 
-export const getRegions = async (req, res) => {
+exports.getRegions = async (req, res) => {
   try {
     const q = await pool.query("SELECT id, name FROM regions ORDER BY name");
     res.json(q.rows);
@@ -10,7 +9,7 @@ export const getRegions = async (req, res) => {
   }
 };
 
-export const getDepartements = async (req, res) => {
+exports.getDepartements = async (req, res) => {
   const { regionId } = req.params;
   try {
     const q = await pool.query("SELECT id, name FROM departements WHERE region_id=$1 ORDER BY name", [regionId]);
@@ -20,7 +19,7 @@ export const getDepartements = async (req, res) => {
   }
 };
 
-export const getZones = async (req, res) => {
+exports.getZones = async (req, res) => {
   const { departementId } = req.params;
   try {
     const q = await pool.query("SELECT id, name FROM zones WHERE departement_id=$1 ORDER BY name", [departementId]);
@@ -30,7 +29,7 @@ export const getZones = async (req, res) => {
   }
 };
 
-export const getArrondissements = async (req, res) => {
+exports.getArrondissements = async (req, res) => {
   const { zoneId } = req.params;
   try {
     const q = await pool.query("SELECT id, name FROM arrondissements WHERE zone_id=$1 ORDER BY name", [zoneId]);
