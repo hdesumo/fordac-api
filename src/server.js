@@ -1,16 +1,8 @@
-/**
- * ============================================
- * 🚀 FORDAC CONNECT — EXPRESS BACKEND
- * Base PostgreSQL - Routes Auth / Forum / Adhésion / Uploads
- * Domaine : https://api.fordac-connect.org
- * ============================================
- */
-
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const contactRoutes = require("./src/routes/contactRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 
@@ -62,7 +54,7 @@ app.use(
 );
 
 /* -------------------------------------------------
-   🛣 ROUTES — Import réel de ton API
+   🛣 ROUTES — CORRIGÉES
 ---------------------------------------------------*/
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/forum", require("./routes/forumRoutes"));
