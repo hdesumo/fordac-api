@@ -1,22 +1,30 @@
 {
   "name": "fordac-api",
   "version": "1.0.0",
-  "type": "module",
+  "description": "FORDAC CONNECT API (Express + PostgreSQL, CommonJS)",
+  "main": "src/server.js",
+  "type": "commonjs",
   "scripts": {
-    "dev": "node src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "dependencies": {
-    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "csv-writer": "^1.6.0",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.2",
-    "nodemailer": "^6.10.1",
-    "pdfkit": "^0.14.0",
-    "pg": "^8.11.1"
-  }
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.9.4",
+    "nodemailer": "^7.0.10",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "keywords": [],
+  "author": "Apps 1 Global",
+  "license": "ISC"
 }
