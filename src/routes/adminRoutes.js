@@ -5,7 +5,6 @@ const {
   createAdmin,
   listAdmins,
   deleteAdmin,
-  adminLogin,
 } = require("../controllers/adminController.js");
 
 const {
@@ -13,9 +12,12 @@ const {
   requireSuperAdmin,
 } = require("../middleware/authMiddleware.js");
 
+// Routes Admin (CRUD géré uniquement par le superadmin)
 router.post("/", verifyToken, requireSuperAdmin, createAdmin);
 router.get("/", verifyToken, requireSuperAdmin, listAdmins);
 router.delete("/:id", verifyToken, requireSuperAdmin, deleteAdmin);
-router.post("/login", adminLogin);
+
+// ❌ IMPORTANT : on supprime totalement l’ancienne route de login
+// router.post("/login", adminLogin);
 
 module.exports = router;
