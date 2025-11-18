@@ -69,6 +69,7 @@ app.use("/api/members/auth", require("./routes/memberAuthRoutes"));   // ← COR
 // MEMBERS
 app.use("/api/members", require("./routes/memberRoutes"));
 app.use("/api/members/notifications", memberNotificationRoutes);
+app.use("/api/members/auth", require("./routes/memberAuthRoutes"));
 
 // ADMIN
 app.use("/api/admin/stats", require("./routes/adminStatsRoutes"));
