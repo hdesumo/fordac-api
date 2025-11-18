@@ -12,13 +12,13 @@ const memberNotificationRoutes = require("./routes/memberNotificationsRoutes");
 const app = express();
 
 /* -------------------------------------------------
-   🔧 Middlewares
+   🔧 MIDDLEWARES
 ---------------------------------------------------*/
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* -------------------------------------------------
-   🔐 CORS — AUTHORISED DOMAINS
+   🔐 CORS : DOMAINES AUTORISÉS
 ---------------------------------------------------*/
 const allowedOrigins = [
   "http://localhost:3000",
@@ -40,8 +40,8 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    console.warn("❌ CORS refusé pour :", origin);
-    callback(new Error("Origine non autorisée par CORS"));
+    console.warn("❌ CORS refusé :", origin);
+    callback(new Error("Origine non autorisée"));
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
@@ -50,7 +50,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 /* -------------------------------------------------
-   📁 STATIC — UPLOADS
+   📁 UPLOADS STATIQUES
 ---------------------------------------------------*/
 app.use(
   "/uploads",
@@ -58,13 +58,13 @@ app.use(
 );
 
 /* -------------------------------------------------
-   🛣 ROUTES — ORDONNÉES ET CORRIGÉES
+   🛣 ROUTES — STRUCTURE FINALE
 ---------------------------------------------------*/
 
 // AUTH
 app.use("/api/auth/admin", require("./routes/adminAuthRoutes"));
 app.use("/api/superadmin/auth", require("./routes/superadminAuthRoutes"));
-app.use("/api/members/auth", require("./routes/memberAuthRoutes"));
+app.use("/api/members/auth", require("./routes/memberAuthRoutes"));   // ← CORRIGÉ & AJOUTÉ
 
 // MEMBERS
 app.use("/api/members", require("./routes/memberRoutes"));
@@ -74,6 +74,7 @@ app.use("/api/members/notifications", memberNotificationRoutes);
 app.use("/api/admin/stats", require("./routes/adminStatsRoutes"));
 app.use("/api/admin/dashboard", require("./routes/adminDashboardRoutes"));
 app.use("/api/admin/membres", require("./routes/adminMembresRoutes"));
+app.use("/api/admin/notifications", require("./routes/adminNotificationRoutes"));
 
 // SUPERADMIN
 app.use("/api/superadmin/dashboard", require("./routes/superadminDashboardRoutes"));
@@ -81,6 +82,8 @@ app.use("/api/superadmin/admins", require("./routes/superadminAdminRoutes"));
 app.use("/api/superadmin/members/export", require("./routes/superadminMemberExportRoutes"));
 app.use("/api/superadmin/members/stats", require("./routes/superadminMemberStatsRoutes"));
 app.use("/api/superadmin/activities", require("./routes/superadminActivitiesRoutes"));
+app.use("/api/superadmin/notifications", require("./routes/superadminNotificationRoutes"));
+app.use("/api/superadmin/member-activities", require("./routes/superadminMemberActivityRoutes"));
 
 // FORUM / PUBLICATIONS
 app.use("/api/forum", forumRoutes);
@@ -91,22 +94,22 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/contact", contactRoutes);
 
 /* -------------------------------------------------
-   🧪 TEST ROUTE
+   🧪 ROUTE TEST
 ---------------------------------------------------*/
 app.get("/", (req, res) => {
   res.json({
     status: "OK",
     app: "FORDAC CONNECT API",
     version: "1.0.0",
-    database: "PostgreSQL",
+    db: "PostgreSQL",
     domain: process.env.API_BASE_URL || "not-set",
   });
 });
 
 /* -------------------------------------------------
-   🚀 LAUNCH SERVER
+   🚀 DÉMARRAGE SERVER
 ---------------------------------------------------*/
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`🚀 FORDAC API démarrée sur le port ${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`🚀 FORDAC API démarrée sur le port ${PORT}`);
+});

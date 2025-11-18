@@ -1,26 +1,27 @@
 const db = require("../db");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs"); // ← IMPORTANT
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
-
   try {
-    const result = await db.query("SELECT * FROM superadmin WHERE email = $1", [email]);
+    const { email, password } = req.body;
+
+    const result = await db.query(
+      "SELECT * FROM superadmins WHERE email = $1",
+      [email]
+    );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: "Email incorrect" });
+      return res.status(404).json({ message: "SuperAdmin non trouvé" });
     }
 
-    const superadmin = result.rows[0];
+    const user = result.rows[0];
 
-    const passwordMatch = await bcrypt.compare(password, superadmin.password);
-    if (!passwordMatch) {
-      return res.status(401).json({ error: "Mot de passe incorrect" });
+    if (user.password !== password) {
+      return res.status(400).json({ message: "Mot de passe incorrect" });
     }
 
     const token = jwt.sign(
-      { id: superadmin.id, role: "superadmin" },
+      { id: user.id, role: "superadmin" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -29,13 +30,13 @@ exports.login = async (req, res) => {
       message: "Connexion réussie",
       token,
       superadmin: {
-        id: superadmin.id,
-        name: superadmin.name,
-        email: superadmin.email
-      }
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (error) {
-    console.error("Erreur login superadmin :", error);
-    res.status(500).json({ error: "Erreur serveur" });
+    console.error("SuperAdmin Login Error:", error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
