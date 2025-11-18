@@ -1,42 +1,32 @@
-const db = require('../config/db');
-const bcrypt = require("bcryptjs");
-const jwt = require('jsonwebtoken');
+const db = require("../db");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs"); // ← IMPORTANT
 
-exports.superadminLogin = async (req, res) => {
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email et mot de passe obligatoires.' });
-    }
-
-    // Vérifier si email existe
-    const result = await db.query(
-      'SELECT * FROM superadmin WHERE email = $1 LIMIT 1',
-      [email]
-    );
+    const result = await db.query("SELECT * FROM superadmin WHERE email = $1", [email]);
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ message: 'Identifiants invalides.' });
+      return res.status(401).json({ error: "Email incorrect" });
     }
 
     const superadmin = result.rows[0];
 
-    // Vérifier mot de passe
-    const isMatch = await bcrypt.compare(password, superadmin.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Mot de passe incorrect.' });
+    const passwordMatch = await bcrypt.compare(password, superadmin.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Mot de passe incorrect" });
     }
 
-    // Générer token
     const token = jwt.sign(
-      { id: superadmin.id, role: 'superadmin', email: superadmin.email },
+      { id: superadmin.id, role: "superadmin" },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: "7d" }
     );
 
-    return res.status(200).json({
-      message: 'Connexion réussie',
+    res.json({
+      message: "Connexion réussie",
       token,
       superadmin: {
         id: superadmin.id,
@@ -44,9 +34,8 @@ exports.superadminLogin = async (req, res) => {
         email: superadmin.email
       }
     });
-
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Erreur serveur.' });
+    console.error("Erreur login superadmin :", error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 };

@@ -1,75 +1,35 @@
-const db = require("../config/db");
-const bcrypt = require("bcryptjs");
+const db = require("../db");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs"); // ← IMPORTANT : bcryptjs seulement
 
-// Services
-const activity = require("../services/activityService");
-const superadminNotify = require("../services/superadminNotificationService");
+// ADMIN LOGIN
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
 
-// =======================================================
-// 🔐 LOGIN ADMIN
-// =======================================================
-exports.adminLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    const result = await db.query(
-      `SELECT id, name, email, password, service
-       FROM admins
-       WHERE email = $1`,
-      [email]
-    );
+    // Vérifier l'existence de l'admin
+    const result = await db.query("SELECT * FROM admins WHERE email = $1", [email]);
 
     if (result.rows.length === 0) {
-      return res.status(400).json({ message: "Email introuvable." });
+      return res.status(401).json({ error: "Email incorrect" });
     }
 
     const admin = result.rows[0];
 
-    // Vérification du mot de passe
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Mot de passe incorrect." });
+    // Vérification du password
+    const passwordMatch = await bcrypt.compare(password, admin.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Mot de passe incorrect" });
     }
 
     // Génération du token
     const token = jwt.sign(
-      {
-        id: admin.id,
-        role: "admin",
-      },
+      { id: admin.id, role: "admin" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // =======================================================
-    // 🔔 1. Journal d'activité (ADMIN)
-    // =======================================================
-    await activity.logActivity(
-      admin.id,
-      "Connexion",
-      `L'administrateur ${admin.name} s'est connecté.`,
-      "/admin/dashboard",
-      {
-        ip: req.ip,
-        agent: req.headers["user-agent"],
-      }
-    );
-
-    // =======================================================
-    // 🔔 2. Notification SuperAdmin
-    // =======================================================
-    await superadminNotify.notifySuperAdmin(
-      "info",
-      "Connexion administrateur",
-      `${admin.name} vient de se connecter.`,
-      "/superadmin/activities"
-    );
-
-    // =======================================================
-    // 🔁 3. Réponse front
-    // =======================================================
-    return res.json({
+    res.json({
       message: "Connexion réussie",
       token,
       admin: {
@@ -77,11 +37,11 @@ exports.adminLogin = async (req, res) => {
         name: admin.name,
         email: admin.email,
         service: admin.service,
-      },
+        role: admin.role
+      }
     });
-
   } catch (error) {
-    console.error("Erreur adminLogin:", error);
-    return res.status(500).json({ message: "Erreur serveur." });
+    console.error("Erreur login admin :", error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 };

@@ -1,40 +1,31 @@
-// controllers/authMemberController.js
-const db = require("../config/db");
+const db = require("../db");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs"); // ← IMPORTANT
 
-exports.loginMember = async (req, res) => {
-  const { email, phone, password } = req.body;
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
 
   try {
-    // Connexion par email OU téléphone
-    const result = await db.query(
-      `
-      SELECT * FROM members 
-      WHERE email=$1 OR phone=$2
-      `,
-      [email, phone]
-    );
+    const result = await db.query("SELECT * FROM members WHERE email = $1", [email]);
 
-    if (result.rows.length === 0)
-      return res.status(404).json({ message: "Compte introuvable" });
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Email incorrect" });
+    }
 
     const member = result.rows[0];
 
-    const isMatch = await bcrypt.compare(password, member.password);
-    if (!isMatch)
-      return res.status(401).json({ message: "Mot de passe incorrect" });
+    const match = await bcrypt.compare(password, member.password);
+    if (!match) {
+      return res.status(401).json({ error: "Mot de passe incorrect" });
+    }
 
     const token = jwt.sign(
-      {
-        id: member.id,
-        role: "member",
-      },
+      { id: member.id, role: "member" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    return res.json({
+    res.json({
       message: "Connexion réussie",
       token,
       member: {
@@ -42,10 +33,14 @@ exports.loginMember = async (req, res) => {
         name: member.name,
         email: member.email,
         phone: member.phone,
-      },
+        membership_level: member.membership_level,
+        secteur: member.secteur,
+        arrondissement: member.arrondissement,
+        departement: member.departement
+      }
     });
-  } catch (err) {
-    console.error("Erreur loginMember:", err);
-    return res.status(500).json({ message: "Erreur serveur" });
+  } catch (error) {
+     console.error("Erreur login membre :", error);
+     res.status(500).json({ error: "Erreur serveur" });
   }
 };
