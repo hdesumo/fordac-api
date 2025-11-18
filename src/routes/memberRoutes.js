@@ -1,43 +1,21 @@
-// src/routes/memberRoutes.js (CommonJS)
-
+// routes/memberRoutes.js
 const express = require("express");
-const {
-  listMembers,
-  getMemberById,
-  createMember,
-  updateMember,
-  approveMember
-} = require("../controllers/memberController");
-  
-// Nous utilisons le middleware commun déjà converti :
-const {
-  requireAuth,
-  requireAdmin,
-  requireSuperAdmin
-} = require("../middleware/verifyToken");
-
 const router = express.Router();
 
-/* ----------------------------------------------------------
-   🔓 Route publique — inscription d’un membre
----------------------------------------------------------- */
-router.post("/register", createMember);
+const authMember = require("../controllers/authMemberController");
+const memberProfile = require("../controllers/memberProfileController");
+const memberNotif = require("../controllers/memberNotificationController");
 
-/* ----------------------------------------------------------
-   🔒 Routes protégées admin / superadmin
----------------------------------------------------------- */
+const memberMiddleware = require("../middleware/memberMiddleware");
 
-// Liste de tous les membres
-router.get("/", requireAdmin, listMembers);
+// AUTH
+router.post("/login", authMember.loginMember);
 
-// Détails d’un membre
-router.get("/:id", requireAdmin, getMemberById);
+// PROFILE
+router.get("/profile", memberMiddleware, memberProfile.getProfile);
+router.put("/profile", memberMiddleware, memberProfile.updateProfile);
 
-// Modifier un membre
-router.put("/:id", requireAdmin, updateMember);
+// NOTIFICATIONS
+router.get("/notifications", memberMiddleware, memberNotif.getMemberNotifications);
 
-// Approuver un membre
-router.put("/:id/approve", requireSuperAdmin, approveMember);
-
-// EXPORT COMMONJS
 module.exports = router;
