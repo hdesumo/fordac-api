@@ -1,25 +1,34 @@
+const db = require("../db"); // ✅ IMPORT OBLIGATOIRE
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const admin = await db.query(
-      "SELECT * FROM admins WHERE email = $1",
-      [email]
-    );
+    // Vérifier si admin existe
+    const sql = "SELECT * FROM admins WHERE email = $1 LIMIT 1";
+    const result = await db.query(sql, [email]);
 
-    if (admin.rows.length === 0) {
-      return res.status(404).json({ message: "Admin non trouvé" });
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: "Admin introuvable" });
     }
 
-    const user = admin.rows[0];
+    const admin = result.rows[0];
 
-    if (user.password !== password) {
-      return res.status(400).json({ message: "Mot de passe incorrect" });
+    if (admin.password !== password) {
+      return res.status(401).json({ message: "Mot de passe incorrect" });
     }
 
-    return res.json({ message: "Connexion réussie", admin: user });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Erreur serveur" });
+    res.json({
+      message: "Connexion réussie",
+      admin: {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email
+      }
+    });
+
+  } catch (error) {
+    console.error("Erreur login admin:", error);
+    res.status(500).json({ message: "Erreur interne du serveur" });
   }
 };
