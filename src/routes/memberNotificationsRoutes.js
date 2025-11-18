@@ -1,12 +1,49 @@
+const express = require("express");
+const router = express.Router();
+
+const memberMiddleware = require("../middleware/memberMiddleware");
+const memberNotificationService = require("../services/memberNotificationService");
+
+/**
+ * GET /members/notifications-count
+ * Nombre non lu de notifications du membre
+ */
 router.get("/notifications-count", memberMiddleware, async (req, res) => {
   try {
-    const result = await db.query(
-      "SELECT COUNT(*) FROM member_notifications WHERE member_id = $1 AND is_read = false",
-      [req.member.id]
-    );
-
-    return res.json({ count: parseInt(result.rows[0].count, 10) });
+    const count = await memberNotificationService.getUnreadCount(req.member.id);
+    res.json({ count });
   } catch (error) {
-    return res.status(500).json({ message: "Erreur interne." });
+    console.error("Erreur notifications-count:", error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+/**
+ * GET /members/notifications
+ * Liste complète des notifications
+ */
+router.get("/notifications", memberMiddleware, async (req, res) => {
+  try {
+    const list = await memberNotificationService.getAll(req.member.id);
+    res.json({ notifications: list });
+  } catch (error) {
+    console.error("Erreur notifications list:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+/**
+ * POST /members/notifications/mark-read/:id
+ * Marquer une notification comme lue
+ */
+router.post("/notifications/mark-read/:id", memberMiddleware, async (req, res) => {
+  try {
+    await memberNotificationService.markRead(req.params.id, req.member.id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Erreur mark-read:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+module.exports = router;
