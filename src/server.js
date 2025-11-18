@@ -36,8 +36,6 @@ const memberAuthRoutes = require("./routes/memberAuthRoutes");
 // Contacts
 const contactRoutes = require("./routes/contactRoutes");
 
-// Departments
-const departmentRoutes = require("./routes/departmentRoutes");
 
 // Events
 const eventRoutes = require("./routes/eventRoutes");
@@ -63,8 +61,6 @@ app.use("/api/members", memberAuthRoutes);   // ✔️ UN SEUL POINT D’ENTRÉE
 // Contacts
 app.use("/api/contacts", contactRoutes);
 
-// Departments
-app.use("/api/departments", departmentRoutes);
 
 // Events
 app.use("/api/events", eventRoutes);
