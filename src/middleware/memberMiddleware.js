@@ -1,7 +1,7 @@
 // middleware/memberMiddleware.js
 
 const jwt = require("jsonwebtoken");
-const db = require("../config/db");
+const db = require("../db");
 
 module.exports = async function (req, res, next) {
   const auth = req.headers.authorization;

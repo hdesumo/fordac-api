@@ -1,4 +1,4 @@
-const pool = require("../config/db.js");
+const pool = require("../db.js");
 
 // 🟩 Créer un nouvel événement
 exports.createEvent = async (req, res) => {

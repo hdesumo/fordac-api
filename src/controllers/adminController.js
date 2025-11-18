@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const pool = require("../config/db.js");
+const pool = require("../db.js");
 
 /**
  * ➕ Créer un admin (réservé au superadmin)

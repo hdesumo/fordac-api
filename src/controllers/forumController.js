@@ -1,6 +1,6 @@
 // controllers/forumController.js
 
-const db = require("../config/db");
+const db = require("../db");
 const { notifyMember } = require("../services/memberNotificationService");
 
 // ====================================

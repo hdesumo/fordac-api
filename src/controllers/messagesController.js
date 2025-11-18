@@ -1,4 +1,4 @@
-const pool = require("../config/db.js");
+const pool = require("../db.js");
 
 exports.sendMessage = async (req, res) => {
   const senderId = req.user.id;

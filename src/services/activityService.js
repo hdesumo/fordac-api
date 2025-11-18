@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const db = require("../db");
 
 async function logActivity(admin_id, action, description, link = null, meta = {}) {
   const ip = meta.ip || null;

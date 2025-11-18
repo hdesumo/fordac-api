@@ -1,4 +1,4 @@
-const pool = require("../config/db.js");
+const pool = require("../db.js");
 const bcrypt = require("bcryptjs");
 
 exports.superAdminLogin = async (req, res) => {

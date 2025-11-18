@@ -1,4 +1,4 @@
-const pool = require("../config/db.js");
+const pool = require("../db.js");
 
 exports.getRegions = async (req, res) => {
   try {

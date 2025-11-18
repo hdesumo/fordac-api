@@ -1,4 +1,4 @@
-const pool = require("../config/db.js");
+const pool = require("../db.js");
 const transporter = require("../services/mail.js");
 const bcrypt = require("bcryptjs");
 

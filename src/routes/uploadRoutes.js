@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const pool = require("../config/db.js");
+const pool = require("../db.js");
 const { verifyToken } = require("../middleware/authMiddleware.js");
 
 const router = express.Router();

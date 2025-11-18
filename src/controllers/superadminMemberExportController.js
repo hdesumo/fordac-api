@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const db = require("../db");
 const ExcelJS = require("exceljs");
 const PDFDocument = require("pdfkit");
 

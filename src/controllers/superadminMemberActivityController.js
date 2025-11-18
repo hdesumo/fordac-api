@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const db = require("../db");
 
 exports.getMemberActivities = async (req, res) => {
   try {

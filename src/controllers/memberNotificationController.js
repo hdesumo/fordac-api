@@ -1,6 +1,6 @@
 // controllers/memberNotificationsController.js
 
-const MemberNotifications = require("../models/memberNotifications")(require("../config/db"));
+const MemberNotifications = require("../models/memberNotifications")(require("../db"));
 
 exports.getNotifications = async (req, res) => {
   try {

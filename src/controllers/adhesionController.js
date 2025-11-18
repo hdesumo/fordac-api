@@ -1,4 +1,4 @@
-const pool = require("../config/db.js");
+const pool = require("../db.js");
 const mail = require("../services/mail.js");
 
 exports.createAdhesion = async (req, res) => {

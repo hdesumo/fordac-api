@@ -1,5 +1,5 @@
 // controllers/superadminMemberController.js
-const db = require("../config/db");
+const db = require("../db");
 const { logMemberActivity } = require("../middleware/memberActivityMiddleware");
 
 // ======================================================

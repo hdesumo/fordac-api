@@ -1,5 +1,5 @@
 // middleware/memberActivityMiddleware.js
-const db = require("../config/db");
+const db = require("../db");
 
 exports.logMemberActivity = async (
   memberId,

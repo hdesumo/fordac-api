@@ -1,5 +1,5 @@
 // controllers/memberProfileController.js
-const db = require("../config/db");
+const db = require("../db");
 
 exports.getProfile = async (req, res) => {
   try {

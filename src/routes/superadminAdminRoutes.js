@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../config/db");
+const db = require("../db");
 const bcrypt = require("bcryptjs");
 const superadminMiddleware = require("../middleware/superadminMiddleware");
 

@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const db = require("../db");
 
 /**
  * Crée une notification interne pour un administrateur

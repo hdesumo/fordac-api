@@ -1,6 +1,6 @@
 // services/memberNotificationService.js
 
-const db = require("../config/db");
+const db = require("../db");
 
 async function notifyMember(member_id, { title, message, type = "general" }) {
   const query = `
