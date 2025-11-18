@@ -7,13 +7,21 @@ const {
   getMemberProfile,
 } = require("../controllers/authMemberController");
 
-// ROUTE : Inscription membre
+// ==========================
+//  REGISTER (POST /api/members/register)
+// ==========================
 router.post("/register", registerMember);
 
-// ROUTE : Connexion membre
+// ==========================
+//  LOGIN (POST /api/members/login)
+// ==========================
 router.post("/login", loginMember);
 
-// ROUTE : Récupération du profil après login
-router.get("/me", getMemberProfile);
+// ==========================
+//  PROFILE (GET /api/members/profile)
+// ==========================
+// ⚠️ Cette route nécessite un middleware d'auth. 
+// Si tu en as un : ajouter middleware avant getMemberProfile
+router.get("/profile", getMemberProfile);
 
 module.exports = router;
