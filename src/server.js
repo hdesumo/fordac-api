@@ -23,46 +23,25 @@ app.get("/", (req, res) => {
 /* ============================
    ROUTES IMPORT
 ============================ */
-
-// Admin Auth Routes
 const adminAuthRoutes = require("./routes/adminAuthRoutes");
-
-// SuperAdmin Auth (si nécessaire)
 const superadminAuthRoutes = require("./routes/superadminAuthRoutes");
-
-// Members Auth (si nécessaire)
 const memberAuthRoutes = require("./routes/memberAuthRoutes");
-
-// Admin Dashboard Routes
 const adminDashboardRoutes = require("./routes/adminDashboardRoutes");
-
 const adminMiddleware = require("./middleware/adminMiddleware");
-
-
 
 /* ============================
    ROUTES USE
 ============================ */
-
-// Admin
 app.use("/api/admin", adminAuthRoutes);
-
-// SuperAdmin
 app.use("/api/superadmin", superadminAuthRoutes);
-
-// Members
 app.use("/api/members", memberAuthRoutes);
-
-// Dashboard admin
 app.use("/api/admin/dashboard", adminMiddleware, adminDashboardRoutes);
-
 
 /* ============================
    SERVER LISTEN
 ============================ */
+const PORT = process.env.PORT;
 
-const PORT = process.env.PORT || 5001;
-
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
