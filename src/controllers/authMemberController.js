@@ -2,100 +2,65 @@ const db = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-// =========================
-//  REGISTER
-// =========================
-exports.registerMember = async (req, res) => {
-  try {
-    const { name, email, phone, password } = req.body;
-
-    if (!name || !email || !phone || !password) {
-      return res.status(400).json({ message: "Tous les champs sont obligatoires." });
-    }
-
-    const [existing] = await db.query(
-      "SELECT id FROM members WHERE email = $1 OR phone = $2 LIMIT 1",
-      [email, phone]
-    );
-
-    if (existing.length > 0) {
-      return res.status(400).json({ message: "Email ou numéro déjà utilisé." });
-    }
-
-    const hashed = await bcrypt.hash(password, 10);
-
-    await db.query(
-      `INSERT INTO members (name, email, phone, password) 
-       VALUES ($1, $2, $3, $4)`,
-      [name, email, phone, hashed]
-    );
-
-    return res.status(201).json({ message: "Inscription réussie." });
-  } catch (error) {
-    console.error("Register error:", error);
-    return res.status(500).json({ message: "Erreur serveur." });
-  }
-};
-
-// =========================
-//  LOGIN
-// =========================
 exports.loginMember = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, phone, pin } = req.body;
 
-    const [rows] = await db.query(
-      "SELECT * FROM members WHERE email = $1 LIMIT 1",
-      [email]
-    );
-
-    if (rows.length === 0) {
-      return res.status(400).json({ message: "Email incorrect." });
+    if (!email && !phone) {
+      return res.status(400).json({ error: "Email ou téléphone requis." });
     }
 
-    const member = rows[0];
+    if (!pin) {
+      return res.status(400).json({ error: "Code PIN requis." });
+    }
 
-    const match = await bcrypt.compare(password, member.password);
-    if (!match) {
-      return res.status(400).json({ message: "Mot de passe incorrect." });
+    const emailOrPhone = email || phone;
+
+    const query = `
+      SELECT id, name, email, phone, password, status 
+      FROM members 
+      WHERE email = $1 OR phone = $1 
+      LIMIT 1
+    `;
+
+    const result = await db.query(query, [emailOrPhone]);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ error: "Compte introuvable." });
+    }
+
+    const member = result.rows[0];
+
+    // 👉 Vérification du PIN
+    const pinIsValid = await bcrypt.compare(pin, member.password);
+
+    if (!pinIsValid) {
+      return res.status(400).json({ error: "PIN incorrect." });
     }
 
     const token = jwt.sign(
-      { id: member.id, email: member.email, role: "member" },
+      {
+        id: member.id,
+        role: "member",
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    return res.json({
+    return res.status(200).json({
       message: "Connexion réussie",
       token,
-      member,
+      member: {
+        id: member.id,
+        name: member.name,
+        email: member.email,
+        phone: member.phone,
+        status: member.status,
+      },
     });
+
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({ message: "Erreur serveur." });
-  }
-};
-
-// =========================
-//  GET PROFILE
-// =========================
-exports.getMemberProfile = async (req, res) => {
-  try {
-    const memberId = req.user.id; // Doit venir du middleware auth
-
-    const [rows] = await db.query(
-      "SELECT id, name, email, phone, created_at FROM members WHERE id = $1 LIMIT 1",
-      [memberId]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "Membre introuvable" });
-    }
-
-    return res.json(rows[0]);
-  } catch (error) {
-    console.error("Profile error:", error);
-    return res.status(500).json({ message: "Erreur serveur." });
+    return res.status(500).json({ error: "Erreur serveur" });
   }
 };

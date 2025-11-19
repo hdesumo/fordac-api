@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const { login } = require('../controllers/authSuperAdminController');
+const { login } = require("../controllers/authAdminController");
 
-// Route login superadmin
-router.post('/login', login);
+// Connexion admin
+router.post("/login", login);
 
 module.exports = router;

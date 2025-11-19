@@ -1,7 +1,7 @@
+// src/server.js
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const path = require("path");
 
 // Initialize Express
 const app = express();
@@ -13,35 +13,30 @@ app.use(express.urlencoded({ extended: true }));
 
 // Test route
 app.get("/", (req, res) => {
-    res.json({
-        status: "OK",
-        message: "FORDAC API is running",
-        version: "1.0.0"
-    });
+  res.json({
+    status: "OK",
+    message: "FORDAC API is running",
+    version: "1.0.0"
+  });
 });
 
 /* ============================
    ROUTES IMPORT
 ============================ */
 
-// SuperAdmin Auth
-const superadminAuthRoutes = require("./routes/superadminAuthRoutes");
-
-// Admin Auth
+// Admin Auth Routes
 const adminAuthRoutes = require("./routes/adminAuthRoutes");
 
-// Member Auth
+// SuperAdmin Auth (si nécessaire)
+const superadminAuthRoutes = require("./routes/superadminAuthRoutes");
+
+// Members Auth (si nécessaire)
 const memberAuthRoutes = require("./routes/memberAuthRoutes");
 
-// Contacts
-const contactRoutes = require("./routes/contactRoutes");
+// Admin Dashboard Routes
+const adminDashboardRoutes = require("./routes/adminDashboardRoutes");
 
-
-// Events
-const eventRoutes = require("./routes/eventRoutes");
-
-// Notifications
-const notificationsRoutes = require("./routes/memberNotificationsRoutes");
+const adminMiddleware = require("./middleware/adminMiddleware");
 
 
 
@@ -49,33 +44,25 @@ const notificationsRoutes = require("./routes/memberNotificationsRoutes");
    ROUTES USE
 ============================ */
 
-// SuperAdmin
-app.use("/api/superadmin", superadminAuthRoutes);
-
 // Admin
 app.use("/api/admin", adminAuthRoutes);
 
+// SuperAdmin
+app.use("/api/superadmin", superadminAuthRoutes);
+
 // Members
-app.use("/api/members", memberAuthRoutes);   // ✔️ UN SEUL POINT D’ENTRÉE
+app.use("/api/members", memberAuthRoutes);
 
-// Contacts
-app.use("/api/contacts", contactRoutes);
-
-
-// Events
-app.use("/api/events", eventRoutes);
-
-// Notifications
-app.use("/api/notifications", notificationsRoutes);
-
+// Dashboard admin
+app.use("/api/admin/dashboard", adminMiddleware, adminDashboardRoutes);
 
 
 /* ============================
    SERVER LISTEN
 ============================ */
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

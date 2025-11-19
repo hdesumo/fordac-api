@@ -1,8 +1,10 @@
+// src/routes/adminAuthRoutes.js
 const express = require("express");
 const router = express.Router();
 
-const authAdminController = require("../controllers/authAdminController");
+const { login } = require("../controllers/authAdminController");
 
-router.post("/login", authAdminController.login);
+// Route de connexion admin
+router.post("/login", login);
 
 module.exports = router;
