@@ -1,23 +1,30 @@
 const express = require("express");
 const router = express.Router();
+const adminController = require("../controllers/adminController");
+const auth = require("../middleware/authMiddleware");
 
-const {
-  createAdmin,
-  listAdmins,
-  deleteAdmin,
-} = require("../controllers/adminController.js");
+// LOGIN ADMIN
+router.post("/auth/login", adminController.login);
 
-const {
-  verifyToken,
-  requireSuperAdmin,
-} = require("../middleware/authMiddleware.js");
+// DASHBOARD STATS
+router.get(
+  "/dashboard/stats",
+  auth(["admin"]),
+  adminController.getDashboardStats
+);
 
-// Routes Admin (CRUD géré uniquement par le superadmin)
-router.post("/", verifyToken, requireSuperAdmin, createAdmin);
-router.get("/", verifyToken, requireSuperAdmin, listAdmins);
-router.delete("/:id", verifyToken, requireSuperAdmin, deleteAdmin);
+// LISTE DES MEMBRES
+router.get(
+  "/membres",
+  auth(["admin"]),
+  adminController.getMembers
+);
 
-// ❌ IMPORTANT : on supprime totalement l’ancienne route de login
-// router.post("/login", adminLogin);
+// NOTIFICATIONS NON LUES
+router.get(
+  "/notifications/unread",
+  auth(["admin"]),
+  adminController.getUnreadNotifications
+);
 
 module.exports = router;
