@@ -2,6 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+console.log("📡 ENV LOADED:", process.env.DB_HOST, process.env.DB_NAME);
 
 // Initialize Express
 const app = express();
@@ -24,7 +25,7 @@ app.get("/", (req, res) => {
    ROUTES IMPORT
 ============================ */
 const adminAuthRoutes = require("./routes/adminAuthRoutes");
-const superadminAuthRoutes = require("./routes/superadminAuthRoutes");
+const superadminRoutes = require("./routes/superadminRoutes");
 const memberAuthRoutes = require("./routes/memberAuthRoutes");
 const adminDashboardRoutes = require("./routes/adminDashboardRoutes");
 const adminMiddleware = require("./middleware/adminMiddleware");
@@ -33,7 +34,7 @@ const adminMiddleware = require("./middleware/adminMiddleware");
    ROUTES USE
 ============================ */
 app.use("/api/admin", adminAuthRoutes);
-app.use("/api/superadmin", superadminAuthRoutes);
+app.use("/api/superadmin", superadminRoutes);
 app.use("/api/members", memberAuthRoutes);
 app.use("/api/admin/dashboard", adminMiddleware, adminDashboardRoutes);
 
