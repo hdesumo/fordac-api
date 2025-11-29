@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
 /* ============================
    ROUTES IMPORT
 ============================ */
-const adminAuthRoutes = require("./routes/adminAuthRoutes");
+const authAdminRoutes = require("./routes/authAdminRoutes");
 const superadminRoutes = require("./routes/superadminRoutes");
 const memberAuthRoutes = require("./routes/memberAuthRoutes");
 const adminDashboardRoutes = require("./routes/adminDashboardRoutes");
@@ -33,7 +33,7 @@ const adminMiddleware = require("./middleware/adminMiddleware");
 /* ============================
    ROUTES USE
 ============================ */
-app.use("/api/admin", adminAuthRoutes);
+app.use("/api/admin/auth", require("./routes/authAdminRoutes"));
 app.use("/api/superadmin", superadminRoutes);
 app.use("/api/members", memberAuthRoutes);
 app.use("/api/admin/dashboard", adminMiddleware, adminDashboardRoutes);
