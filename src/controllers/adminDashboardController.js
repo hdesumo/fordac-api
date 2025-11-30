@@ -1,66 +1,85 @@
 // src/controllers/adminDashboardController.js
 
-const db = require("../db");
+const pool = require("../config/db");
 
-// -------------------------------
-// 🚀 Admin Dashboard Stats
-// -------------------------------
-exports.getDashboardStats = async (req, res) => {
+// Fonction : tableau de bord admin
+exports.getAdminDashboardStats = async (req, res) => {
+  console.log("📊 [ADMIN DASHBOARD] Requête reçue");
+
   try {
-    console.log("📊 [Dashboard] Calcul des statistiques...");
+    const adminId = req.admin?.id || null;
+    console.log("🔐 Admin ID depuis token:", adminId);
 
-    // 1. Nombre total de membres
-    const totalMembres = await db.query(
-      "SELECT COUNT(*) FROM users WHERE role = 'member'"
+    // Vérification du token
+    if (!adminId) {
+      console.error("⛔ Token invalide ou admin inexistant");
+      return res.status(401).json({ message: "Token invalide." });
+    }
+
+    console.log("📥 Extraction des statistiques...");
+
+    // 1️⃣ Nombre total de membres
+    const totalMembersQuery = `
+      SELECT COUNT(*) AS total
+      FROM members
+    `;
+    const totalMembersResult = await pool.query(totalMembersQuery);
+    const totalMembers = parseInt(totalMembersResult.rows[0].total);
+    console.log("👥 Total membres:", totalMembers);
+
+    // 2️⃣ 10 dernières activités d'admin
+    const lastActivitiesQuery = `
+      SELECT id, admin_id, action, description, ip_address, user_agent, link, created_at
+      FROM admin_activities
+      ORDER BY id DESC
+      LIMIT 10
+    `;
+    const lastActivitiesResult = await pool.query(lastActivitiesQuery);
+
+    console.log(
+      `🕒 Dernières activités récupérées: ${lastActivitiesResult.rowCount}`
     );
 
-    // 2. Nombre total d'admins
-    const totalAdmins = await db.query(
-      "SELECT COUNT(*) FROM users WHERE role = 'admin'"
-    );
+    // 3️⃣ Total publications (posts)
+    const totalPostsQuery = `SELECT COUNT(*) AS total FROM posts`;
+    const totalPostsResult = await pool.query(totalPostsQuery);
+    const totalPosts = parseInt(totalPostsResult.rows[0].total);
+    console.log("📝 Total publications:", totalPosts);
 
-    // 3. Dernières inscriptions
-    const latestMembers = await db.query(
-      `SELECT id, name, email, created_at
-       FROM users
-       WHERE role = 'member'
-       ORDER BY id DESC
-       LIMIT 5`
-    );
+    // 4️⃣ Total événements
+    const totalEventsQuery = `SELECT COUNT(*) AS total FROM events`;
+    const totalEventsResult = await pool.query(totalEventsQuery);
+    const totalEvents = parseInt(totalEventsResult.rows[0].total);
+    console.log("📅 Total événements:", totalEvents);
 
-    // 4. Activités admin (LA BONNE STRUCTURE)
-    const latestActivities = await db.query(
-      `SELECT id, action, description, ip_address, created_at 
-       FROM admin_activities 
-       ORDER BY id DESC 
-       LIMIT 10`
-    );
+    // 5️⃣ Total messages reçus (dans contact_messages)
+    const totalMessagesQuery = `SELECT COUNT(*) AS total FROM contact_messages`;
+    const totalMessagesResult = await pool.query(totalMessagesQuery);
+    const totalMessages = parseInt(totalMessagesResult.rows[0].total);
+    console.log("✉️ Total messages:", totalMessages);
 
-    // 5. Nombre total de publications
-    const totalPublications = await db.query(
-      "SELECT COUNT(*) FROM forum_posts"
-    ).catch(() => ({ rows: [{ count: 0 }] })); // ⚠️ table absente = fallback propre
-
-    // 6. Nombre total de commentaires
-    const totalCommentaires = await db.query(
-      "SELECT COUNT(*) FROM forum_comments"
-    ).catch(() => ({ rows: [{ count: 0 }] }));
-
-    // RÉPONSE
-    return res.json({
+    // Réponse envoyée au frontend
+    const responsePayload = {
       status: "success",
-      stats: {
-        membres: Number(totalMembres.rows[0].count || 0),
-        admins: Number(totalAdmins.rows[0].count || 0),
-        publications: Number(totalPublications.rows[0].count || 0),
-        commentaires: Number(totalCommentaires.rows[0].count || 0),
-        recentMembers: latestMembers.rows,
-        recentActivities: latestActivities.rows,
-      }
-    });
+      dashboard: {
+        totalMembers,
+        totalPosts,
+        totalEvents,
+        totalMessages,
+        lastActivities: lastActivitiesResult.rows ?? [],
+      },
+    };
 
+    console.log("📤 Données envoyées au frontend:", responsePayload);
+
+    return res.json(responsePayload);
   } catch (error) {
     console.error("🔥 ERREUR DASHBOARD ADMIN:", error);
-    return res.status(500).json({ message: "Erreur serveur" });
+
+    return res.status(500).json({
+      status: "error",
+      message: "Erreur serveur lors de la récupération du tableau de bord.",
+      details: error.message,
+    });
   }
 };

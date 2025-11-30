@@ -4,7 +4,7 @@ const router = express.Router();
 const pool = require("../db");
 const adminMiddleware = require("../middleware/adminMiddleware");
 
-// 🔍 Utilitaire pour vérifier si une table existe
+// 🔍 Vérifie si une table existe
 async function tableExists(table) {
   const check = await pool.query(
     `SELECT EXISTS (
@@ -23,7 +23,7 @@ router.get("/stats", adminMiddleware, async (req, res) => {
     const actifs = await pool.query("SELECT COUNT(*) FROM users WHERE status='active'");
     const pending = await pool.query("SELECT COUNT(*) FROM users WHERE status='pending'");
 
-    // 2️⃣ Forum — sécurisé
+    // 2️⃣ Forum
     let totalPosts = { rows: [{ count: 0 }] };
     let totalComments = { rows: [{ count: 0 }] };
 
@@ -35,12 +35,13 @@ router.get("/stats", adminMiddleware, async (req, res) => {
       totalComments = await pool.query("SELECT COUNT(*) FROM forum_comments");
     }
 
-    // 3️⃣ Activités admin
+    // 3️⃣ Activités admin — FIX ICI
     let lastActivities = { rows: [] };
+
     if (await tableExists("admin_activities")) {
       lastActivities = await pool.query(`
-        SELECT id, action_type, description, ip_address, created_at 
-        FROM admin_activities 
+        SELECT id, action, description, ip_address, created_at
+        FROM admin_activities
         ORDER BY id DESC
         LIMIT 10
       `);
