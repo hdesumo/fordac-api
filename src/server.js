@@ -37,6 +37,7 @@ app.use("/api/admin/auth", require("./routes/authAdminRoutes"));
 app.use("/api/superadmin", superadminRoutes);
 app.use("/api/members", memberAuthRoutes);
 app.use("/api/admin/dashboard", adminMiddleware, adminDashboardRoutes);
+app.use("/api/admin/dashboard", require("./routes/adminDashboardRoutes"));
 
 /* ============================
    SERVER LISTEN
