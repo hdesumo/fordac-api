@@ -1,107 +1,66 @@
 // src/controllers/adminDashboardController.js
-const pool = require("../db");
 
-// Fonction sécurisée qui empêche un crash si la table n'existe pas
-async function safeQuery(query, params = []) {
-  try {
-    const result = await pool.query(query, params);
-    return result.rows || [];
-  } catch (err) {
-    console.error("⚠️ SQL ERROR:", query, err.message);
-    return []; // Fallback propre
-  }
-}
+const db = require("../db");
 
+// -------------------------------
+// 🚀 Admin Dashboard Stats
+// -------------------------------
 exports.getDashboardStats = async (req, res) => {
   try {
-    const adminId = req.admin?.id || null;
+    console.log("📊 [Dashboard] Calcul des statistiques...");
 
-    // 1. Membres
-    const totalMembres   = await safeQuery("SELECT COUNT(*) FROM members");
-    const actifs         = await safeQuery("SELECT COUNT(*) FROM members WHERE status='active'");
-    const pending        = await safeQuery("SELECT COUNT(*) FROM members WHERE status='pending'");
-    const suspended      = await safeQuery("SELECT COUNT(*) FROM members WHERE status='suspended'");
-    const banned         = await safeQuery("SELECT COUNT(*) FROM members WHERE status='banned'");
+    // 1. Nombre total de membres
+    const totalMembres = await db.query(
+      "SELECT COUNT(*) FROM users WHERE role = 'member'"
+    );
 
-    // Secteur
-    const nord           = await safeQuery("SELECT COUNT(*) FROM members WHERE secteur='Nord'");
-    const sud            = await safeQuery("SELECT COUNT(*) FROM members WHERE secteur='Sud'");
+    // 2. Nombre total d'admins
+    const totalAdmins = await db.query(
+      "SELECT COUNT(*) FROM users WHERE role = 'admin'"
+    );
 
-    // Top arrondissements
-    const arrondissements = await safeQuery(`
-      SELECT arrondissement, COUNT(*) AS total
-      FROM members
-      GROUP BY arrondissement
-      ORDER BY total DESC
-      LIMIT 10
-    `);
+    // 3. Dernières inscriptions
+    const latestMembers = await db.query(
+      `SELECT id, name, email, created_at
+       FROM users
+       WHERE role = 'member'
+       ORDER BY id DESC
+       LIMIT 5`
+    );
 
-    // Derniers membres inscrits
-    const derniers = await safeQuery(`
-      SELECT name, email, secteur, arrondissement, created_at
-      FROM members
-      ORDER BY created_at DESC
-      LIMIT 8
-    `);
+    // 4. Activités admin (LA BONNE STRUCTURE)
+    const latestActivities = await db.query(
+      `SELECT id, action, description, ip_address, created_at 
+       FROM admin_activities 
+       ORDER BY id DESC 
+       LIMIT 10`
+    );
 
-    // Forum
-    const totalPosts      = await safeQuery("SELECT COUNT(*) FROM forum_posts");
-    const totalComments   = await safeQuery("SELECT COUNT(*) FROM forum_comments");
-    const recentPosts     = await safeQuery(`
-      SELECT id, title, created_at
-      FROM forum_posts
-      ORDER BY created_at DESC
-      LIMIT 5
-    `);
-    const recentComments  = await safeQuery(`
-      SELECT id, post_id, content, created_at
-      FROM forum_comments
-      ORDER BY created_at DESC
-      LIMIT 5
-    `);
+    // 5. Nombre total de publications
+    const totalPublications = await db.query(
+      "SELECT COUNT(*) FROM forum_posts"
+    ).catch(() => ({ rows: [{ count: 0 }] })); // ⚠️ table absente = fallback propre
 
-    // Reports
-    const totalReports    = await safeQuery("SELECT COUNT(*) FROM reports");
-    const recentReports   = await safeQuery(`
-      SELECT id, type, description, created_at
-      FROM reports
-      ORDER BY created_at DESC
-      LIMIT 5
-    `);
+    // 6. Nombre total de commentaires
+    const totalCommentaires = await db.query(
+      "SELECT COUNT(*) FROM forum_comments"
+    ).catch(() => ({ rows: [{ count: 0 }] }));
 
-    // Activités Admin
-    const recentActivities = await safeQuery(`
-      SELECT description, created_at
-      FROM admin_activities
-      ORDER BY created_at DESC
-      LIMIT 8
-    `);
-
+    // RÉPONSE
     return res.json({
-      totalMembres: parseInt(totalMembres[0]?.count || 0),
-      actifs: parseInt(actifs[0]?.count || 0),
-      pending: parseInt(pending[0]?.count || 0),
-      suspended: parseInt(suspended[0]?.count || 0),
-      banned: parseInt(banned[0]?.count || 0),
-
-      nord: parseInt(nord[0]?.count || 0),
-      sud: parseInt(sud[0]?.count || 0),
-
-      arrondissements,
-      derniers,
-
-      totalPosts: parseInt(totalPosts[0]?.count || 0),
-      totalComments: parseInt(totalComments[0]?.count || 0),
-      recentPosts,
-      recentComments,
-
-      totalReports: parseInt(totalReports[0]?.count || 0),
-      recentReports,
-
-      recentActivities,
+      status: "success",
+      stats: {
+        membres: Number(totalMembres.rows[0].count || 0),
+        admins: Number(totalAdmins.rows[0].count || 0),
+        publications: Number(totalPublications.rows[0].count || 0),
+        commentaires: Number(totalCommentaires.rows[0].count || 0),
+        recentMembers: latestMembers.rows,
+        recentActivities: latestActivities.rows,
+      }
     });
-  } catch (err) {
-    console.error("❌ Dashboard Fatal Error:", err);
-    return res.status(500).json({ error: "Erreur interne serveur." });
+
+  } catch (error) {
+    console.error("🔥 ERREUR DASHBOARD ADMIN:", error);
+    return res.status(500).json({ message: "Erreur serveur" });
   }
 };
