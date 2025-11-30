@@ -1,24 +1,35 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
 
-module.exports = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader)
-    return res.status(403).json({ message: 'Token manquant.' });
-
-  const token = authHeader.split(' ')[1];
-
+module.exports = async (req, res, next) => {
   try {
+    const auth = req.headers.authorization;
+    if (!auth) return res.status(401).json({ message: "Token manquant." });
+
+    const token = auth.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (decoded.role !== 'admin') {
-      return res.status(403).json({ message: 'Accès réservé aux Admins.' });
+    const userId = decoded.id;
+
+    // Vérifier admin + superadmin
+    const check = await pool.query(
+      `
+      SELECT id, 'superadmin' AS role FROM superadmin WHERE id = $1
+      UNION
+      SELECT id, 'admin' AS role FROM admins WHERE id = $1
+      `,
+      [userId]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(403).json({ message: "Accès réservé aux Administrateurs." });
     }
 
-    req.admin = decoded;
+    req.admin = check.rows[0]; // { id, role }
     next();
 
-  } catch {
-    return res.status(401).json({ message: 'Token invalide.' });
+  } catch (err) {
+    console.error("Erreur adminMiddleware:", err);
+    return res.status(401).json({ message: "Token invalide ou expiré." });
   }
 };
