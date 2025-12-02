@@ -1,8 +1,12 @@
-const pool = require("../config/db");
-const transporter = require("../config/mailer");
+// =======================================================
+//  CONTROLLER ADHESION — FORDAC CONNECT
+// =======================================================
+
+const pool = require("../db");
+const transporter = require("../services/mail");
 
 // =======================================================
-//  CRÉATION D’UN MEMBRE (ADHÉSION VIA LA VITRINE)
+//  ADHESION : CRÉATION D’UN MEMBRE
 // =======================================================
 
 exports.createMember = async (req, res) => {
@@ -17,10 +21,11 @@ exports.createMember = async (req, res) => {
     secteur,
     arrondissement,
     terms_accepted,
-    resignation_commitment
+    resignation_commitment,
+    belongs_to_party
   } = req.body;
 
-  // 🔥 VALIDATION STRICTE — Tous les champs sont obligatoires
+  // 🔥 VALIDATION STRICTE — Tous les champs obligatoires
   if (
     !name ||
     !email ||
@@ -40,7 +45,7 @@ exports.createMember = async (req, res) => {
   }
 
   try {
-    // Vérifier si email déjà utilisé
+    // Vérifier si email existe
     const check = await pool.query(
       `SELECT id FROM members WHERE email = $1`,
       [email]
@@ -52,7 +57,7 @@ exports.createMember = async (req, res) => {
       });
     }
 
-    // 🌱 INSÉRER LE MEMBRE DANS LA BASE
+    // INSÉRER LE MEMBRE
     const result = await pool.query(
       `
       INSERT INTO members (
@@ -68,6 +73,7 @@ exports.createMember = async (req, res) => {
         quartier,
         terms_accepted,
         resignation_commitment,
+        belongs_to_party,
         status
       )
       VALUES (
@@ -76,6 +82,7 @@ exports.createMember = async (req, res) => {
         $4, $5, $6,
         $7, $8, $9,
         true, true,
+        $10,
         'pending'
       )
       RETURNING *;
@@ -89,38 +96,43 @@ exports.createMember = async (req, res) => {
         arrondissement,
         birthdate,
         profession,
-        quartier
+        quartier,
+        belongs_to_party === true ? true : false
       ]
     );
 
     const member = result.rows[0];
 
-    // 📩 ENVOYER EMAIL CONFIRMATION (si configuré)
-    if (process.env.MAIL_FROM) {
-      try {
-        await transporter.sendMail({
-          from: process.env.MAIL_FROM,
-          to: email,
-          subject: "Votre demande d'adhésion au FORDAC",
-          html: `
-            <h2>Bonjour ${name},</h2>
-            <p>Nous accusons réception de votre demande d'adhésion au FORDAC.</p>
-            <p>Votre dossier est maintenant en statut : <strong>EN ATTENTE DE VALIDATION</strong>.</p>
-            <p>Vous serez contacté dès validation.</p>
-            <p>Cordialement,<br>L’équipe FORDAC Connect</p>
-          `
-        });
-      } catch (e) {
-        console.error("Erreur envoi email :", e.message);
-      }
+    // EMAIL DE CONFIRMATION (si configuré)
+    try {
+      await transporter.sendMail({
+        from: process.env.MAIL_FROM,
+        to: email,
+        subject: "Votre demande d'adhésion au FORDAC",
+        html: `
+          <h2>Bonjour ${name},</h2>
+          <p>Votre demande d'adhésion au <strong>FORDAC</strong> a été enregistrée avec succès.</p>
+          <p>Votre dossier est actuellement en statut : <strong>EN ATTENTE DE VALIDATION</strong>.</p>
+          
+          ${
+            belongs_to_party
+              ? `<p>⚠️ Vous avez déclaré appartenir à un autre parti politique.</p>
+                 <p>Comme indiqué, votre adhésion au FORDAC ne deviendra <strong>définitive</strong> qu’après transmission de votre lettre officielle de démission de votre ancien parti.</p>`
+              : ""
+          }
+
+          <p>Vous recevrez une notification dès la validation de votre adhésion.</p>
+          <p>Cordialement,<br>L’équipe FORDAC Connect</p>
+        `
+      });
+    } catch (e) {
+      console.error("Erreur envoi email :", e.message);
     }
 
-    // Réponse finale
     return res.status(201).json({
       message: "Adhésion enregistrée avec succès.",
       member
     });
-
   } catch (error) {
     console.error("❌ Erreur lors de la création du membre :", error);
     return res.status(500).json({
@@ -130,23 +142,25 @@ exports.createMember = async (req, res) => {
 };
 
 // =======================================================
-//  PROFIL MEMBRE (existe déjà chez toi)
+//  PROFIL MEMBRE (déjà existant)
 // =======================================================
 
 exports.profile = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const result = await pool.query("SELECT * FROM members WHERE id = $1", [
-      userId
-    ]);
+    const memberId = req.user.id;
+
+    const result = await pool.query(
+      `SELECT * FROM members WHERE id = $1`,
+      [memberId]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Membre non trouvé." });
     }
 
-    return res.json(result.rows[0]);
+    res.json(result.rows[0]);
   } catch (error) {
-    console.error("Erreur récupération profil :", error);
-    return res.status(500).json({ error: "Erreur interne." });
+    console.error("Erreur profil :", error);
+    res.status(500).json({ error: "Erreur interne du serveur." });
   }
 };

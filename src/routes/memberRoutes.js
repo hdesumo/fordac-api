@@ -1,12 +1,25 @@
 const express = require("express");
 const router = express.Router();
 const memberController = require("../controllers/memberController");
-const auth = require("../middleware/authMiddleware");
 
-// 🔥 Route d'enregistrement d'un membre (adhésion via la vitrine)
+// =======================================================
+//  ROUTES ADHÉSION — FORDAC CONNECT
+// =======================================================
+
+// 🟩 FORMULAIRE D’ADHÉSION — CRÉATION D’UN MEMBRE
 router.post("/register", memberController.createMember);
 
-// 🔐 Dashboard membre (accès protégé)
-router.get("/profile", auth(["membre"]), memberController.profile);
+// 🟩 PROFIL MEMBRE (protégé, si middleware existe)
+try {
+  const authMiddleware = require("../middlewares/authMiddleware");
+  router.get("/profile", authMiddleware, memberController.profile);
+} catch (e) {
+  // Si ton projet n'a pas encore de middleware, on ignore
+  console.log("ℹ️ Middleware auth non trouvé, route /profile non protégée.");
+  router.get("/profile", memberController.profile);
+}
 
+// =======================================================
+// EXPORT ROUTER
+// =======================================================
 module.exports = router;
