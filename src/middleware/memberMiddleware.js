@@ -1,69 +1,46 @@
-// middleware/memberMiddleware.js
 const jwt = require("jsonwebtoken");
-const pool = require("../config/db");
+const pool = require("../db");
 
 module.exports = async (req, res, next) => {
   try {
-    const auth = req.headers.authorization;
+    const authHeader = req.headers.authorization;
 
-    if (!auth) {
-      return res.status(401).json({
-        message: "Connexion requise. Veuillez vous identifier."
-      });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Token manquant." });
     }
 
-    const token = auth.split(" ")[1];
+    const token = authHeader.split(" ")[1];
 
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-      return res.status(401).json({
-        message: "Token invalide ou expiré."
-      });
-    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const userId = decoded.id;
-
-    // Vérification membre
+    // Récupérer le membre dans la DB
     const result = await pool.query(
-      `
-      SELECT id, name, status, shadow_banned 
-      FROM members 
-      WHERE id = $1
-      `,
-      [userId]
+      "SELECT id, name, phone, email, status FROM members WHERE id = $1",
+      [decoded.id]
     );
 
     if (result.rows.length === 0) {
-      return res.status(403).json({
-        message: "Accès réservé aux membres connectés."
-      });
+      return res.status(401).json({ error: "Membre non trouvé." });
     }
 
     const member = result.rows[0];
 
-    // Vérifier statut (ex : active, suspendu)
-    if (member.status && member.status !== "active") {
-      return res.status(403).json({
-        message: "Votre adhésion n'est pas active."
-      });
-    }
+    // 🔥🔥🔥 FIX IMPORTANT 🔥🔥🔥
+    req.member = {
+      id: member.id,
+      name: member.name,
+      phone: member.phone,
+      email: member.email,
+      status: member.status
+    };
 
-    // Shadow-ban : accès total mais contributions bloquées
-    if (member.shadow_banned === true) {
-      req.member = {
-        ...member,
-        restricted: true
-      };
-      return next();
-    }
+    // (Tu peux garder req.user si tu veux)
+    req.user = req.member;
 
-    req.member = member;
     next();
 
   } catch (err) {
-    console.error("Erreur memberMiddleware:", err);
-    res.status(401).json({ message: "Erreur d'authentification." });
+    console.error("Erreur auth membre:", err);
+    return res.status(401).json({ error: "Token invalide ou expiré." });
   }
 };

@@ -8,6 +8,8 @@ const pool = require("./db");
 
 // Routes membres
 const memberRoutes = require("./routes/memberRoutes");
+const memberForumRoutes = require("./routes/memberForumRoutes");
+const memberAuthRoutes = require("./routes/memberAuthRoutes");
 
 // =======================================================
 // INITIALISATION
@@ -46,6 +48,9 @@ if (process.env.NODE_ENV !== "production") {
 // ROUTES API
 // =======================================================
 app.use("/api/members", memberRoutes);
+app.use("/api/forum", memberForumRoutes);
+app.use("/api/member/forum", memberForumRoutes);
+app.use("/api/member", memberAuthRoutes);
 
 // Route de test
 app.get("/", (req, res) => {
